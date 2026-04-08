@@ -1,0 +1,28 @@
+{{if .Logs}}
+<div class="overflow-auto">
+    <table class="striped">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>User</th>
+                <th>Resource</th>
+                <th>IP</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Logs}}
+            <tr>
+                <td><small>{{.CreatedAt.Format "01-02 15:04:05"}}</small></td>
+                <td><code class="action-{{.Action}}">{{.Action}}</code></td>
+                <td>{{if .UserID}}#{{.UserID}}{{else}}<span class="muted">—</span>{{end}}</td>
+                <td>{{if .ResourceID}}#{{.ResourceID}}{{else}}<span class="muted">—</span>{{end}}</td>
+                <td><small>{{.IPAddress}}</small></td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else}}
+<p class="muted">No audit logs</p>
+{{end}}

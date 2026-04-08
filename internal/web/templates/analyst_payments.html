@@ -1,0 +1,56 @@
+{{if .Payments}}
+<div class="overflow-auto">
+    <table class="striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Amount</th>
+                <th>Fraud Score</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Payments}}
+            <tr class="{{if gt .FraudScore 0.7}}high-risk{{end}}">
+                <td><code>#{{.ID}}</code></td>
+                <td>User #{{.UserID}}</td>
+                <td class="amount">{{printf "%.2f" .Amount}} {{.Currency}}</td>
+                <td>
+                    <span class="fraud-score {{if gt .FraudScore 0.7}}high{{else if gt .FraudScore 0.4}}medium{{else}}low{{end}}">
+                        {{printf "%.0f" (mul .FraudScore 100)}}%
+                    </span>
+                </td>
+                <td>
+                    <span class="status status-{{.Status}}">{{.Status}}</span>
+                </td>
+                <td class="actions">
+                    {{if ne .Status "rejected"}}
+                    <button 
+                        class="outline small secondary"
+                        hx-get="/analyst/payments/{{.ID}}/flag-form"
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML">
+                        {{if eq .Status "flagged"}}Review{{else}}Flag{{end}}
+                    </button>
+                    {{end}}
+                    {{if or (eq .Status "flagged") (eq .Status "pending")}}
+                    <button 
+                        class="small contrast"
+                        hx-get="/analyst/payments/{{.ID}}/reject-form"
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML">
+                        Reject
+                    </button>
+                    {{end}}
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+<div id="modal-container"></div>
+{{else}}
+<p class="muted">No suspicious transactions found</p>
+{{end}}

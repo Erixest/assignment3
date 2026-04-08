@@ -1,0 +1,45 @@
+{{define "content"}}
+<section>
+    <header class="page-header">
+        <hgroup>
+            <h2>🛡️ Fraud Analyst Dashboard</h2>
+            <p>Monitor and investigate suspicious transactions</p>
+        </hgroup>
+    </header>
+
+    {{with .Data}}
+    <div class="grid">
+        <article class="stat-card">
+            <header>Flagged</header>
+            <p class="stat-number">{{.Stats.Flagged}}</p>
+        </article>
+        <article class="stat-card">
+            <header>High Risk</header>
+            <p class="stat-number">{{.Stats.HighRisk}}</p>
+        </article>
+        <article class="stat-card">
+            <header>Rejected</header>
+            <p class="stat-number">{{.Stats.Rejected}}</p>
+        </article>
+    </div>
+    {{end}}
+
+    <article>
+        <header>
+            <h3>Suspicious Transactions</h3>
+        </header>
+        <div id="flagged-list" hx-get="/analyst/payments/list" hx-trigger="load" hx-swap="innerHTML">
+            <p aria-busy="true">Loading...</p>
+        </div>
+    </article>
+
+    <article>
+        <header>
+            <h3>Recent Audit Logs</h3>
+        </header>
+        <div id="audit-list" hx-get="/analyst/audit/list" hx-trigger="load" hx-swap="innerHTML">
+            <p aria-busy="true">Loading...</p>
+        </div>
+    </article>
+</section>
+{{end}}

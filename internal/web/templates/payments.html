@@ -1,0 +1,15 @@
+{{define "content"}}
+<section>
+    <header class="page-header">
+        <hgroup>
+            <h2>My Payments</h2>
+            <p>View and manage your transactions</p>
+        </hgroup>
+        <a href="/payments/new" role="button">+ New Payment</a>
+    </header>
+
+    <div id="payments-list" hx-get="/payments/list" hx-trigger="load" hx-swap="innerHTML">
+        <article aria-busy="true">Loading payments...</article>
+    </div>
+</section>
+{{end}}

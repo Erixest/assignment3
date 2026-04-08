@@ -13,6 +13,7 @@ import (
 	"fintech-payments-mvp/internal/middleware"
 	"fintech-payments-mvp/internal/models"
 	"fintech-payments-mvp/internal/services"
+	"fintech-payments-mvp/internal/web"
 )
 
 func main() {
@@ -39,6 +40,8 @@ func main() {
 	paymentHandler := handlers.NewPaymentHandler(paymentService, auditService)
 	auditHandler := handlers.NewAuditHandler(auditService)
 
+	webHandler := web.NewWebHandler(authService, paymentService, auditService, db)
+
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
@@ -46,6 +49,8 @@ func main() {
 	r.Use(middleware.RateLimitMiddleware(cfg))
 
 	_ = r.SetTrustedProxies(nil)
+
+	webHandler.RegisterRoutes(r)
 
 	api := r.Group("/api/v1")
 	{
@@ -84,6 +89,8 @@ func main() {
 	})
 
 	log.Printf("Starting server on port %s", cfg.ServerPort)
+	log.Println("Web UI: http://localhost:" + cfg.ServerPort)
+	log.Println("API: http://localhost:" + cfg.ServerPort + "/api/v1")
 	if err := r.Run(":" + cfg.ServerPort); err != nil {
 		log.Fatalf("Server error: %v", err)
 		os.Exit(1)

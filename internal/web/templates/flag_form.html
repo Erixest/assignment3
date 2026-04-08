@@ -1,0 +1,24 @@
+<dialog open>
+    <article>
+        <header>
+            <button aria-label="Close" rel="prev" onclick="this.closest('dialog').remove()"></button>
+            <h3>Flag Payment #{{.Payment.ID}}</h3>
+        </header>
+        <form hx-post="/analyst/payments/{{.Payment.ID}}/flag" hx-target="#flagged-list" hx-swap="innerHTML">
+            <p>
+                <strong>Amount:</strong> {{printf "%.2f" .Payment.Amount}} {{.Payment.Currency}}<br>
+                <strong>Fraud Score:</strong> {{printf "%.0f" (mul .Payment.FraudScore 100)}}%<br>
+                <strong>Current Status:</strong> {{.Payment.Status}}
+            </p>
+            <label for="reason">
+                Reason for flagging
+                <textarea id="reason" name="reason" required minlength="10" maxlength="1000" 
+                          placeholder="Describe why this transaction is suspicious..." rows="3"></textarea>
+            </label>
+            <footer>
+                <button type="button" class="secondary" onclick="this.closest('dialog').remove()">Cancel</button>
+                <button type="submit">Flag Transaction</button>
+            </footer>
+        </form>
+    </article>
+</dialog>

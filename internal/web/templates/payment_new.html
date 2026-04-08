@@ -1,0 +1,49 @@
+{{define "content"}}
+<article class="payment-form">
+    <header>
+        <hgroup>
+            <h2>New Payment</h2>
+            <p>Send money securely</p>
+        </hgroup>
+    </header>
+    
+    <form hx-post="/payments/new" hx-target="#payment-result" hx-swap="innerHTML">
+        <div class="grid">
+            <label for="amount">
+                Amount
+                <input type="number" id="amount" name="amount" placeholder="0.00" 
+                       step="0.01" min="0.01" max="1000000" required autofocus>
+            </label>
+            
+            <label for="currency">
+                Currency
+                <select id="currency" name="currency" required>
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="RUB">RUB - Russian Ruble</option>
+                </select>
+            </label>
+        </div>
+        
+        <label for="recipient_id">
+            Recipient ID
+            <input type="text" id="recipient_id" name="recipient_id" 
+                   placeholder="RECV12345678" pattern="[A-Z0-9]{8,20}" 
+                   title="8-20 uppercase letters and numbers" required>
+            <small>Enter the recipient's account identifier (8-20 characters, uppercase)</small>
+        </label>
+        
+        <label for="description">
+            Description (optional)
+            <textarea id="description" name="description" placeholder="Payment for..." maxlength="500" rows="2"></textarea>
+        </label>
+        
+        <div class="grid">
+            <a href="/payments" role="button" class="secondary outline">Cancel</a>
+            <button type="submit">Create Payment</button>
+        </div>
+    </form>
+    
+    <div id="payment-result"></div>
+</article>
+{{end}}

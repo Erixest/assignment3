@@ -1,0 +1,48 @@
+{{if .Payments}}
+<div class="overflow-auto">
+    <table class="striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Recipient</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Payments}}
+            <tr>
+                <td><code>#{{.ID}}</code></td>
+                <td class="amount">{{printf "%.2f" .Amount}} {{.Currency}}</td>
+                <td><code>{{.RecipientID}}</code></td>
+                <td>
+                    <span class="status status-{{.Status}}">{{.Status}}</span>
+                </td>
+                <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                <td>
+                    {{if eq .Status "pending"}}
+                    <button 
+                        class="outline small"
+                        hx-post="/payments/{{.ID}}/confirm" 
+                        hx-target="#payments-list"
+                        hx-swap="innerHTML"
+                        hx-confirm="Confirm this payment?">
+                        Confirm
+                    </button>
+                    {{else}}
+                    <span class="muted">—</span>
+                    {{end}}
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else}}
+<article class="empty-state">
+    <p>No payments yet</p>
+    <a href="/payments/new" role="button" class="outline">Create your first payment</a>
+</article>
+{{end}}

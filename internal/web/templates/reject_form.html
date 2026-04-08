@@ -1,0 +1,26 @@
+<dialog open>
+    <article>
+        <header>
+            <button aria-label="Close" rel="prev" onclick="this.closest('dialog').remove()"></button>
+            <h3>⚠️ Reject Payment #{{.Payment.ID}}</h3>
+        </header>
+        <form hx-post="/analyst/payments/{{.Payment.ID}}/reject" hx-target="#flagged-list" hx-swap="innerHTML">
+            <p class="warning">
+                This action is irreversible. The payment will be permanently rejected.
+            </p>
+            <p>
+                <strong>Amount:</strong> {{printf "%.2f" .Payment.Amount}} {{.Payment.Currency}}<br>
+                <strong>Fraud Score:</strong> {{printf "%.0f" (mul .Payment.FraudScore 100)}}%
+            </p>
+            <label for="reason">
+                Reason for rejection
+                <textarea id="reason" name="reason" required minlength="10" maxlength="1000" 
+                          placeholder="Document the reason for rejecting this payment..." rows="3"></textarea>
+            </label>
+            <footer>
+                <button type="button" class="secondary" onclick="this.closest('dialog').remove()">Cancel</button>
+                <button type="submit" class="contrast">Reject Payment</button>
+            </footer>
+        </form>
+    </article>
+</dialog>

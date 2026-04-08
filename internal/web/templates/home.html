@@ -1,0 +1,37 @@
+{{define "content"}}
+<section class="hero">
+    <hgroup>
+        <h1>Secure Digital Payments</h1>
+        <p>Fast, secure, and monitored transactions with fraud protection</p>
+    </hgroup>
+    
+    {{if not .User}}
+    <div class="grid">
+        <a href="/register" role="button">Get Started</a>
+        <a href="/login" role="button" class="outline">Sign In</a>
+    </div>
+    {{else}}
+    <div class="grid">
+        <a href="/payments/new" role="button">New Payment</a>
+        <a href="/payments" role="button" class="outline">View History</a>
+    </div>
+    {{end}}
+</section>
+
+<section>
+    <div class="grid">
+        <article>
+            <header>🔒 Secure</header>
+            <p>Bank-grade encryption and bcrypt password hashing protect your data.</p>
+        </article>
+        <article>
+            <header>🛡️ Fraud Protection</header>
+            <p>AI-powered fraud detection monitors every transaction in real-time.</p>
+        </article>
+        <article>
+            <header>📊 Transparent</header>
+            <p>Full audit trail and transaction history at your fingertips.</p>
+        </article>
+    </div>
+</section>
+{{end}}

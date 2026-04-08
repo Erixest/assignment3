@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - FinPay</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+    <nav class="container-fluid">
+        <ul>
+            <li><a href="/" class="logo"><strong>💳 FinPay</strong></a></li>
+        </ul>
+        <ul>
+            {{if .User}}
+            <li><span class="user-info">{{.User.Email}}</span></li>
+            {{if eq (printf "%s" .User.Role) "fraud_analyst"}}
+            <li><a href="/analyst" role="button" class="outline secondary">Analyst</a></li>
+            {{end}}
+            <li><a href="/payments" role="button" class="outline">Payments</a></li>
+            <li><a href="#" hx-post="/logout" hx-target="body" role="button" class="secondary">Logout</a></li>
+            {{else}}
+            <li><a href="/login" role="button" class="outline">Login</a></li>
+            <li><a href="/register" role="button">Register</a></li>
+            {{end}}
+        </ul>
+    </nav>
+
+    <main class="container">
+        {{if .Flash}}
+        <article class="flash {{.FlashType}}">
+            {{.Flash}}
+        </article>
+        {{end}}
+
+        {{block "content" .}}{{end}}
+    </main>
+
+    <footer class="container-fluid">
+        <small>© 2026 FinPay - Secure Digital Payments</small>
+    </footer>
+</body>
+</html>
