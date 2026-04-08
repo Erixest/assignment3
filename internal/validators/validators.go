@@ -14,8 +14,8 @@ var recipientIDRegex = regexp.MustCompile(`^[A-Z0-9]{8,20}$`)
 
 func init() {
 	validate = validator.New()
-	validate.RegisterValidation("validcurrency", validateCurrency)
-	validate.RegisterValidation("validrecipient", validateRecipient)
+	_ = validate.RegisterValidation("validcurrency", validateCurrency)
+	_ = validate.RegisterValidation("validrecipient", validateRecipient)
 }
 
 func validateCurrency(fl validator.FieldLevel) bool {

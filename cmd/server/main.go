@@ -45,7 +45,7 @@ func main() {
 	r.Use(middleware.SecurityHeaders())
 	r.Use(middleware.RateLimitMiddleware(cfg))
 
-	r.SetTrustedProxies(nil)
+	_ = r.SetTrustedProxies(nil)
 
 	api := r.Group("/api/v1")
 	{

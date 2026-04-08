@@ -1,8 +1,9 @@
 package services
 
 import (
+	"crypto/rand"
+	"encoding/binary"
 	"errors"
-	"math/rand"
 
 	"fintech-payments-mvp/internal/database"
 	"fintech-payments-mvp/internal/models"
@@ -101,7 +102,10 @@ func (s *PaymentService) calculateFraudScore(amount float64, currency models.Cur
 		score += 0.1
 	}
 
-	score += rand.Float64() * 0.2
+	var randomBytes [8]byte
+	rand.Read(randomBytes[:])
+	randomValue := float64(binary.LittleEndian.Uint64(randomBytes[:])) / float64(^uint64(0))
+	score += randomValue * 0.2
 
 	if score > 1.0 {
 		score = 1.0
