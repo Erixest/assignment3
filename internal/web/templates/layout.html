@@ -1,45 +1,62 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}} - FinPay</title>
-    <link rel="stylesheet" href="/static/css/pico.min.css">
-    <link rel="stylesheet" href="/static/css/app.css">
-    <script src="/static/js/htmx.min.js"></script>
-</head>
-<body>
-    <nav class="container-fluid">
-        <ul>
-            <li><a href="/" class="logo"><strong>💳 FinPay</strong></a></li>
-        </ul>
-        <ul>
-            {{if .User}}
-            <li><span class="user-info">{{.User.Email}}</span></li>
-            {{if eq (printf "%s" .User.Role) "fraud_analyst"}}
-            <li><a href="/analyst" role="button" class="outline secondary">Analyst</a></li>
-            {{end}}
-            <li><a href="/payments" role="button" class="outline">Payments</a></li>
-            <li><a href="#" hx-post="/logout" hx-target="body" role="button" class="secondary">Logout</a></li>
-            {{else}}
-            <li><a href="/login" role="button" class="outline">Login</a></li>
-            <li><a href="/register" role="button">Register</a></li>
-            {{end}}
-        </ul>
-    </nav>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{.Title}} - FinPay</title>
+        <link rel="stylesheet" href="/static/css/pico.min.css" />
+        <link rel="stylesheet" href="/static/css/app.css" />
+        <script src="/static/js/htmx.min.js"></script>
+    </head>
+    <body>
+        <nav class="container-fluid">
+            <ul>
+                <li>
+                    <a href="/" class="logo"><strong>FinPay</strong></a>
+                </li>
+            </ul>
+            <ul>
+                {{if .User}}
+                <li><span class="user-info">{{.User.Email}}</span></li>
+                {{if eq (printf "%s" .User.Role) "fraud_analyst"}}
+                <li>
+                    <a href="/analyst" role="button" class="outline secondary"
+                        >Analyst</a
+                    >
+                </li>
+                {{end}}
+                <li>
+                    <a href="/payments" role="button" class="outline"
+                        >Payments</a
+                    >
+                </li>
+                <li>
+                    <a
+                        href="#"
+                        hx-post="/logout"
+                        hx-target="body"
+                        role="button"
+                        class="secondary"
+                        >Logout</a
+                    >
+                </li>
+                {{else}}
+                <li>
+                    <a href="/login" role="button" class="outline">Login</a>
+                </li>
+                <li><a href="/register" role="button">Register</a></li>
+                {{end}}
+            </ul>
+        </nav>
 
-    <main class="container">
-        {{if .Flash}}
-        <article class="flash {{.FlashType}}">
-            {{.Flash}}
-        </article>
-        {{end}}
+        <main class="container">
+            {{if .Flash}}
+            <article class="flash {{.FlashType}}">{{.Flash}}</article>
+            {{end}} {{block "content" .}}{{end}}
+        </main>
 
-        {{block "content" .}}{{end}}
-    </main>
-
-    <footer class="container-fluid">
-        <small>© 2026 FinPay - Secure Digital Payments</small>
-    </footer>
-</body>
+        <footer class="container-fluid">
+            <small>© 2026 Assignment 3</small>
+        </footer>
+    </body>
 </html>

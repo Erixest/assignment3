@@ -13,12 +13,16 @@ type Config struct {
 	JWTExpiry          time.Duration
 	RateLimitRequests  int
 	RateLimitWindow    time.Duration
+	// CookieSecure controls the Secure flag on session cookies.
+	// Should be true in production (HTTPS). Can be set to false for local HTTP dev.
+	CookieSecure       bool
 }
 
 func Load() *Config {
 	jwtExpiry, _ := strconv.Atoi(getEnv("JWT_EXPIRY_MINUTES", "15"))
 	rateLimitReqs, _ := strconv.Atoi(getEnv("RATE_LIMIT_REQUESTS", "100"))
 	rateLimitWindow, _ := strconv.Atoi(getEnv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+	cookieSecure := getEnv("COOKIE_SECURE", "true") != "false"
 
 	return &Config{
 		JWTSecret:          getEnv("JWT_SECRET", ""),
@@ -27,6 +31,7 @@ func Load() *Config {
 		JWTExpiry:          time.Duration(jwtExpiry) * time.Minute,
 		RateLimitRequests:  rateLimitReqs,
 		RateLimitWindow:    time.Duration(rateLimitWindow) * time.Second,
+		CookieSecure:       cookieSecure,
 	}
 }
 

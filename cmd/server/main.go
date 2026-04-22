@@ -40,12 +40,15 @@ func main() {
 	paymentHandler := handlers.NewPaymentHandler(paymentService, auditService)
 	auditHandler := handlers.NewAuditHandler(auditService)
 
-	webHandler := web.NewWebHandler(authService, paymentService, auditService, db)
+	webHandler := web.NewWebHandler(authService, paymentService, auditService, db, cfg)
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.SecurityHeaders())
+	// FIX: CWE-400 — ограничение размера тела запроса (1 МБ) для предотвращения
+	// атак типа «memory exhaustion» через загрузку сверхбольших тел запросов.
+	r.Use(middleware.MaxBodySizeMiddleware(1 << 20)) // 1 MB
 	r.Use(middleware.RateLimitMiddleware(cfg))
 
 	_ = r.SetTrustedProxies(nil)

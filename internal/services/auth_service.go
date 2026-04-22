@@ -1,6 +1,8 @@
 package services
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -63,6 +65,16 @@ func (s *AuthService) Login(email, password string) (*models.User, string, error
 }
 
 func (s *AuthService) generateToken(user *models.User) (string, error) {
+	// FIX: CWE-613 — добавлен уникальный идентификатор токена (jti).
+	// Ранее все токены одного пользователя были идентичны, что исключало
+	// возможность избирательного отзыва. Поле jti (JWT ID) позволяет в будущем
+	// реализовать revocation list или проверку по базе данных.
+	jtiBytes := make([]byte, 16)
+	if _, err := rand.Read(jtiBytes); err != nil {
+		return "", err
+	}
+	jti := hex.EncodeToString(jtiBytes)
+
 	claims := Claims{
 		UserID: user.ID,
 		Email:  user.Email,
@@ -71,6 +83,7 @@ func (s *AuthService) generateToken(user *models.User) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.config.JWTExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Subject:   user.Email,
+			ID:        jti,
 		},
 	}
 

@@ -35,5 +35,10 @@ func (db *DB) GetAuditLogs(limit, offset int) ([]models.AuditLog, error) {
 		logs = append(logs, log)
 	}
 
+	// FIX: CWE-703 — проверка rows.Err() после итерации курсора аудит-журнала.
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return logs, nil
 }

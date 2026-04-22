@@ -130,5 +130,12 @@ func scanPayments(rows *sql.Rows) ([]models.Payment, error) {
 		payments = append(payments, payment)
 	}
 
+	// FIX: CWE-703 — проверка ошибок итерации курсора БД после завершения цикла.
+	// rows.Err() возвращает ошибку, возникшую во время итерации (например,
+	// разрыв соединения), которая иначе была бы молча проигнорирована.
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return payments, nil
 }

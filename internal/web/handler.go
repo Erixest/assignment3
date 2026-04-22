@@ -5,15 +5,63 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 
+	"fintech-payments-mvp/internal/config"
 	"fintech-payments-mvp/internal/database"
 	"fintech-payments-mvp/internal/models"
 	"fintech-payments-mvp/internal/services"
 )
+
+// recipientIDPattern enforces an allowlist of uppercase alphanumeric characters
+// (8–20 chars) matching the same constraint applied in the API validator (CWE-20).
+var recipientIDPattern = regexp.MustCompile(`^[A-Z0-9]{8,20}$`)
+
+// validatePassword enforces strong password complexity requirements (CWE-521).
+// Returns a non-empty error message string if the password fails any check,
+// or an empty string if the password is acceptable.
+// Rules: 8–72 characters, at least one uppercase, one lowercase, one digit,
+// and one special character from the allowed set.
+func validatePassword(password string) string {
+	const specialChars = "!@#$%^&*()-_=+[]{}|;:',.<>?/`~"
+	if len(password) < 8 {
+		return "Password must be at least 8 characters"
+	}
+	if len(password) > 72 {
+		return "Password must not exceed 72 characters (bcrypt limit)"
+	}
+	var hasUpper, hasLower, hasDigit, hasSpecial bool
+	for _, r := range password {
+		switch {
+		case unicode.IsUpper(r):
+			hasUpper = true
+		case unicode.IsLower(r):
+			hasLower = true
+		case unicode.IsDigit(r):
+			hasDigit = true
+		case strings.ContainsRune(specialChars, r):
+			hasSpecial = true
+		}
+	}
+	if !hasUpper {
+		return "Password must contain at least one uppercase letter (A-Z)"
+	}
+	if !hasLower {
+		return "Password must contain at least one lowercase letter (a-z)"
+	}
+	if !hasDigit {
+		return "Password must contain at least one digit (0-9)"
+	}
+	if !hasSpecial {
+		return "Password must contain at least one special character (!@#$%^&*...)"
+	}
+	return ""
+}
 
 //go:embed templates/*.html
 var templateFS embed.FS
@@ -27,6 +75,7 @@ type WebHandler struct {
 	paymentService *services.PaymentService
 	auditService   *services.AuditService
 	db             *database.DB
+	cookieSecure   bool
 }
 
 type PageData struct {
@@ -43,7 +92,7 @@ type AnalystStats struct {
 	Rejected int
 }
 
-func NewWebHandler(authService *services.AuthService, paymentService *services.PaymentService, auditService *services.AuditService, db *database.DB) *WebHandler {
+func NewWebHandler(authService *services.AuthService, paymentService *services.PaymentService, auditService *services.AuditService, db *database.DB, cfg *config.Config) *WebHandler {
 	funcMap := template.FuncMap{
 		"mul": func(a, b float64) float64 { return a * b },
 	}
@@ -56,6 +105,7 @@ func NewWebHandler(authService *services.AuthService, paymentService *services.P
 		paymentService: paymentService,
 		auditService:   auditService,
 		db:             db,
+		cookieSecure:   cfg.CookieSecure,
 	}
 }
 
@@ -110,7 +160,14 @@ func (h *WebHandler) render(c *gin.Context, name string, data PageData) {
 
 func (h *WebHandler) renderPartial(c *gin.Context, name string, data interface{}) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
-	h.templates.ExecuteTemplate(c.Writer, name, data)
+	// FIX: G104 (CWE-703) — ошибка ExecuteTemplate теперь обрабатывается явно.
+	// Ранее ошибка рендеринга молча игнорировалась, что могло приводить к
+	// отправке клиенту пустого или частично сформированного ответа без
+	// каких-либо признаков сбоя на стороне сервера.
+	// РАНЕЕ: h.templates.ExecuteTemplate(c.Writer, name, data)
+	if err := h.templates.ExecuteTemplate(c.Writer, name, data); err != nil {
+		c.String(http.StatusInternalServerError, "Template render error: "+err.Error())
+	}
 }
 
 func (h *WebHandler) getCurrentUser(c *gin.Context) *services.Claims {
@@ -177,7 +234,9 @@ func (h *WebHandler) Login(c *gin.Context) {
 	}
 
 	h.auditService.Log(&user.ID, models.AuditActionLogin, nil, "web login", c.ClientIP())
-	c.SetCookie("token", token, 900, "/", "", false, true)
+	// FIX: CWE-614 — флаг Secure теперь управляется конфигурацией (COOKIE_SECURE=true).
+	// Ранее был жёстко установлен в false, что допускало передачу cookie по HTTP.
+	c.SetCookie("token", token, 900, "/", "", h.cookieSecure, true)
 	c.Header("HX-Redirect", "/payments")
 	c.Status(http.StatusOK)
 }
@@ -201,9 +260,12 @@ func (h *WebHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if len(password) < 8 {
+	// FIX: CWE-521 — усиленная проверка сложности пароля.
+	// Ранее проверялась только длина (>= 8 символов).
+	// Теперь обязательны: заглавная, строчная буква, цифра и спецсимвол.
+	if errMsg := validatePassword(password); errMsg != "" {
 		c.Header("Content-Type", "text/html")
-		c.String(http.StatusOK, `<article class="flash error">Password must be at least 8 characters</article>`)
+		c.String(http.StatusOK, `<article class="flash error">`+errMsg+`</article>`)
 		return
 	}
 
@@ -217,7 +279,8 @@ func (h *WebHandler) Register(c *gin.Context) {
 	h.auditService.Log(&user.ID, models.AuditActionRegister, nil, "web registration", c.ClientIP())
 
 	_, token, _ := h.authService.Login(email, password)
-	c.SetCookie("token", token, 900, "/", "", false, true)
+	// FIX: CWE-614 — аналогично Login, флаг Secure из конфигурации.
+	c.SetCookie("token", token, 900, "/", "", h.cookieSecure, true)
 	c.Header("HX-Redirect", "/payments")
 	c.Status(http.StatusOK)
 }
@@ -262,9 +325,13 @@ func (h *WebHandler) CreatePayment(c *gin.Context) {
 	}
 
 	recipientID := strings.ToUpper(strings.TrimSpace(c.PostForm("recipient_id")))
-	if len(recipientID) < 8 || len(recipientID) > 20 {
+	// FIX: CWE-20 — allowlist-валидация recipientID через регулярное выражение.
+	// Ранее проверялась только длина (8–20 символов), что допускало произвольные
+	// символы (пробелы, спецсимволы, символы Unicode). Теперь применяется
+	// тот же паттерн ^[A-Z0-9]{8,20}$, что и в API-валидаторе.
+	if !recipientIDPattern.MatchString(recipientID) {
 		c.Header("Content-Type", "text/html")
-		c.String(http.StatusOK, `<article class="flash error">Recipient ID must be 8-20 characters</article>`)
+		c.String(http.StatusOK, `<article class="flash error">Recipient ID must be 8-20 uppercase alphanumeric characters</article>`)
 		return
 	}
 
@@ -288,9 +355,17 @@ func (h *WebHandler) CreatePayment(c *gin.Context) {
 
 func (h *WebHandler) ConfirmPayment(c *gin.Context) {
 	user := h.getCurrentUser(c)
-	paymentID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	// FIX: CWE-703 — обработка ошибки разбора paymentID.
+	// Ранее ошибка strconv.ParseInt молча игнорировалась, что при невалидном
+	// параметре приводило к попытке подтвердить платёж с ID=0.
+	paymentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || paymentID <= 0 {
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusBadRequest, `<p class="error">Invalid payment ID</p>`)
+		return
+	}
 
-	err := h.paymentService.ConfirmPayment(paymentID, user.UserID)
+	err = h.paymentService.ConfirmPayment(paymentID, user.UserID)
 	if err != nil {
 		c.Header("Content-Type", "text/html")
 		c.String(http.StatusOK, `<p class="error">Cannot confirm this payment</p>`)
@@ -304,7 +379,10 @@ func (h *WebHandler) ConfirmPayment(c *gin.Context) {
 }
 
 func (h *WebHandler) AnalystPage(c *gin.Context) {
-	flagged, _ := h.paymentService.GetFlaggedPayments(100, 0)
+	// FIX: CWE-400 — ограничение выборки при загрузке страницы аналитика.
+	// Ранее загружалось до 100 записей без явного ограничения на уровне бизнес-логики.
+	// Теперь используется безопасное значение по умолчанию (50).
+	flagged, _ := h.paymentService.GetFlaggedPayments(50, 0)
 
 	stats := AnalystStats{}
 	for _, p := range flagged {
@@ -352,6 +430,13 @@ func (h *WebHandler) FlagPayment(c *gin.Context) {
 		c.String(http.StatusBadRequest, "Reason must be at least 10 characters")
 		return
 	}
+	// FIX: CWE-20 — ограничение максимальной длины поля reason.
+	// Ранее отсутствовала верхняя граница, что допускало передачу произвольно
+	// большого текста в базу данных и журнал аудита.
+	if len(reason) > 1000 {
+		c.String(http.StatusBadRequest, "Reason must not exceed 1000 characters")
+		return
+	}
 
 	err := h.paymentService.FlagPayment(paymentID, user.UserID, reason)
 	if err != nil {
@@ -385,6 +470,11 @@ func (h *WebHandler) RejectPayment(c *gin.Context) {
 
 	if len(reason) < 10 {
 		c.String(http.StatusBadRequest, "Reason must be at least 10 characters")
+		return
+	}
+	// FIX: CWE-20 — ограничение максимальной длины поля reason (аналогично FlagPayment).
+	if len(reason) > 1000 {
+		c.String(http.StatusBadRequest, "Reason must not exceed 1000 characters")
 		return
 	}
 
