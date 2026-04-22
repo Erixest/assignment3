@@ -148,25 +148,30 @@ func (h *WebHandler) render(c *gin.Context, name string, data PageData) {
 
 	tmpl, err = template.New("").Funcs(funcMap).ParseFS(templateFS, "templates/layout.html", "templates/"+name)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Template parse error: "+err.Error())
+		// FIX: CWE-209 — внутренние детали ошибки Go не раскрываются пользователю.
+		// Ранее: c.String(500, "Template parse error: "+err.Error())
+		// Полный текст ошибки включал пути к файлам и внутренние имена — информация
+		// полезная атакующему для разведки структуры приложения.
+		c.String(http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
 	err = tmpl.ExecuteTemplate(c.Writer, "layout.html", data)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "Template exec error: "+err.Error())
+		// FIX: CWE-209 — аналогично, ошибка выполнения шаблона не раскрывается.
+		// Ранее: c.String(500, "Template exec error: "+err.Error())
+		c.String(http.StatusInternalServerError, "Internal server error")
 	}
 }
 
 func (h *WebHandler) renderPartial(c *gin.Context, name string, data interface{}) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	// FIX: G104 (CWE-703) — ошибка ExecuteTemplate теперь обрабатывается явно.
-	// Ранее ошибка рендеринга молча игнорировалась, что могло приводить к
-	// отправке клиенту пустого или частично сформированного ответа без
-	// каких-либо признаков сбоя на стороне сервера.
 	// РАНЕЕ: h.templates.ExecuteTemplate(c.Writer, name, data)
 	if err := h.templates.ExecuteTemplate(c.Writer, name, data); err != nil {
-		c.String(http.StatusInternalServerError, "Template render error: "+err.Error())
+		// FIX: CWE-209 — только generic сообщение, без деталей Go runtime.
+		// Ранее: c.String(500, "Template render error: "+err.Error())
+		c.String(http.StatusInternalServerError, "Internal server error")
 	}
 }
 
@@ -409,7 +414,11 @@ func (h *WebHandler) AnalystPaymentsList(c *gin.Context) {
 }
 
 func (h *WebHandler) FlagForm(c *gin.Context) {
-	paymentID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	paymentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || paymentID <= 0 {
+		c.String(http.StatusBadRequest, "Invalid payment ID")
+		return
+	}
 	user := h.getCurrentUser(c)
 
 	payment, err := h.paymentService.GetPayment(paymentID, user.UserID, user.Role)
@@ -423,7 +432,11 @@ func (h *WebHandler) FlagForm(c *gin.Context) {
 
 func (h *WebHandler) FlagPayment(c *gin.Context) {
 	user := h.getCurrentUser(c)
-	paymentID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	paymentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || paymentID <= 0 {
+		c.String(http.StatusBadRequest, "Invalid payment ID")
+		return
+	}
 	reason := strings.TrimSpace(c.PostForm("reason"))
 
 	if len(reason) < 10 {
@@ -438,7 +451,7 @@ func (h *WebHandler) FlagPayment(c *gin.Context) {
 		return
 	}
 
-	err := h.paymentService.FlagPayment(paymentID, user.UserID, reason)
+	err = h.paymentService.FlagPayment(paymentID, user.UserID, reason)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Cannot flag payment")
 		return
@@ -451,7 +464,11 @@ func (h *WebHandler) FlagPayment(c *gin.Context) {
 }
 
 func (h *WebHandler) RejectForm(c *gin.Context) {
-	paymentID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	paymentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || paymentID <= 0 {
+		c.String(http.StatusBadRequest, "Invalid payment ID")
+		return
+	}
 	user := h.getCurrentUser(c)
 
 	payment, err := h.paymentService.GetPayment(paymentID, user.UserID, user.Role)
@@ -465,7 +482,11 @@ func (h *WebHandler) RejectForm(c *gin.Context) {
 
 func (h *WebHandler) RejectPayment(c *gin.Context) {
 	user := h.getCurrentUser(c)
-	paymentID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	paymentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || paymentID <= 0 {
+		c.String(http.StatusBadRequest, "Invalid payment ID")
+		return
+	}
 	reason := strings.TrimSpace(c.PostForm("reason"))
 
 	if len(reason) < 10 {
@@ -478,7 +499,7 @@ func (h *WebHandler) RejectPayment(c *gin.Context) {
 		return
 	}
 
-	err := h.paymentService.RejectPayment(paymentID, user.UserID, reason)
+	err = h.paymentService.RejectPayment(paymentID, user.UserID, reason)
 	if err != nil {
 		c.String(http.StatusBadRequest, "Cannot reject payment")
 		return

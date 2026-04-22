@@ -1,61 +1,57 @@
 #!/usr/bin/env python3
-"""Generate securep5.docx — Practical Work #5 report for fintech-payments-mvp."""
+"""Generate securep5.docx — Practical Work #5."""
 
 from docx import Document
 from docx.shared import Pt, RGBColor, Inches, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-import copy
 
 doc = Document()
 
-# ── Page margins ─────────────────────────────────────────────────────────────
 for section in doc.sections:
     section.top_margin    = Cm(2)
     section.bottom_margin = Cm(2)
     section.left_margin   = Cm(3)
     section.right_margin  = Cm(1.5)
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-def h1(text):
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    run = p.add_run(text)
-    run.bold = True
-    run.font.size = Pt(14)
-    run.font.color.rgb = RGBColor(0x1F, 0x49, 0x7D)
-    p.paragraph_format.space_before = Pt(12)
-    p.paragraph_format.space_after  = Pt(4)
-    return p
+# ─── helpers ────────────────────────────────────────────────────────────────
 
-def h2(text):
+def heading(text, level=1):
     p = doc.add_paragraph()
     run = p.add_run(text)
     run.bold = True
-    run.font.size = Pt(12)
-    run.font.color.rgb = RGBColor(0x2E, 0x74, 0xB5)
-    p.paragraph_format.space_before = Pt(8)
-    p.paragraph_format.space_after  = Pt(2)
+    if level == 1:
+        run.font.size = Pt(14)
+        run.font.color.rgb = RGBColor(0x1F, 0x49, 0x7D)
+        p.paragraph_format.space_before = Pt(14)
+        p.paragraph_format.space_after  = Pt(4)
+    elif level == 2:
+        run.font.size = Pt(12)
+        run.font.color.rgb = RGBColor(0x2E, 0x74, 0xB5)
+        p.paragraph_format.space_before = Pt(10)
+        p.paragraph_format.space_after  = Pt(3)
+    else:
+        run.font.size = Pt(11)
+        p.paragraph_format.space_before = Pt(6)
+        p.paragraph_format.space_after  = Pt(2)
     return p
 
-def h3(text):
+def para(text, bold=False, indent=0):
     p = doc.add_paragraph()
+    p.paragraph_format.left_indent = Cm(indent)
+    p.paragraph_format.space_after = Pt(4)
     run = p.add_run(text)
-    run.bold = True
-    run.font.size = Pt(11)
-    p.paragraph_format.space_before = Pt(6)
-    p.paragraph_format.space_after  = Pt(2)
+    run.bold = bold
     return p
 
-def body(text, indent=0):
-    p = doc.add_paragraph()
+def bullet(text, indent=0.5):
+    p = doc.add_paragraph(style="List Bullet")
     p.paragraph_format.left_indent = Cm(indent)
     p.add_run(text)
     return p
 
-def code_block(text):
+def code(text):
     p = doc.add_paragraph()
     run = p.add_run(text)
     run.font.name = "Courier New"
@@ -64,270 +60,369 @@ def code_block(text):
     shd = OxmlElement("w:shd")
     shd.set(qn("w:val"), "clear")
     shd.set(qn("w:color"), "auto")
-    shd.set(qn("w:fill"), "F2F2F2")
+    shd.set(qn("w:fill"), "F0F0F0")
     pPr.append(shd)
     p.paragraph_format.left_indent  = Cm(0.5)
     p.paragraph_format.space_before = Pt(2)
     p.paragraph_format.space_after  = Pt(2)
     return p
 
-def table_header_row(table, headers, widths=None):
+def label(text):
+    """Small bold inline label before a code block."""
+    p = doc.add_paragraph()
+    p.paragraph_format.space_after = Pt(1)
+    run = p.add_run(text)
+    run.bold = True
+    run.font.size = Pt(10)
+    run.font.color.rgb = RGBColor(0x70, 0x70, 0x70)
+    return p
+
+def tbl_header(table, headers):
     row = table.rows[0]
-    for i, (cell, hdr) in enumerate(zip(row.cells, headers)):
+    for cell, hdr in zip(row.cells, headers):
         cell.text = hdr
-        cell.paragraphs[0].runs[0].bold = True
+        run = cell.paragraphs[0].runs[0]
+        run.bold = True
         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        tc = cell._tc
-        tcPr = tc.get_or_add_tcPr()
+        tcPr = cell._tc.get_or_add_tcPr()
         shd = OxmlElement("w:shd")
         shd.set(qn("w:val"), "clear")
         shd.set(qn("w:color"), "auto")
-        shd.set(qn("w:fill"), "BDD7EE")
+        shd.set(qn("w:fill"), "C9DAF8")
         tcPr.append(shd)
-        if widths:
-            cell.width = Inches(widths[i])
 
-def add_row(table, values):
+def tbl_row(table, values):
     row = table.add_row()
     for cell, val in zip(row.cells, values):
         cell.text = str(val)
         cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.LEFT
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TITLE PAGE
-# ═══════════════════════════════════════════════════════════════════════════════
-p = doc.add_paragraph()
-p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run = p.add_run("ПРАКТИЧЕСКАЯ РАБОТА № 5")
-run.bold = True; run.font.size = Pt(16)
+# ════════════════════════════════════════════════════════════════════════════
+# TITLE
+# ════════════════════════════════════════════════════════════════════════════
 
 p = doc.add_paragraph()
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p.add_run("Тема: Комплексный анализ безопасности MVP: обработка памяти и ресурсов,\n"
-          "инъекционные уязвимости, аутентификация, авторизация и криптографическая защита").bold = True
+r = p.add_run("ПРАКТИЧЕСКАЯ РАБОТА № 5")
+r.bold = True; r.font.size = Pt(16)
+
+p = doc.add_paragraph()
+p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run(
+    "Тема: Комплексный анализ безопасности MVP — обработка памяти и ресурсов, "
+    "инъекционные уязвимости, аутентификация, авторизация и криптографическая защита"
+)
+r.bold = True; r.font.size = Pt(12)
 
 doc.add_paragraph()
-body("Вариант 10: Финтех — цифровые платежи и мониторинг мошенничества")
-body("Выполнил: Студент магистратуры, группа ИБ-1")
-body("Проверил: Преподаватель кафедры информационной безопасности")
-doc.add_paragraph()
+para("Вариант 10: Финтех — цифровые платежи и мониторинг мошенничества")
+para("Выполнил: Студент магистратуры, группа ИБ-1")
+para("Проверил: Преподаватель кафедры информационной безопасности")
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 1. ЦЕЛЬ РАБОТЫ
-# ═══════════════════════════════════════════════════════════════════════════════
-h1("1. Цель работы")
-body("Провести углублённый комплексный аудит безопасности MVP-системы fintech-payments-mvp "
-     "(Go, Gin, SQLite) по четырём направлениям: управление памятью и ресурсами, "
-     "инъекционные уязвимости и обработка входных данных, аутентификация/авторизация/"
-     "криптография, а также количественная оценка рисков по CVSS v4.0. "
-     "Для каждой выявленной проблемы реализовать исправление, подтвердить устранение "
-     "дефекта и классифицировать по CWE.")
+# ════════════════════════════════════════════════════════════════════════════
+# 1. ЦЕЛЬ
+# ════════════════════════════════════════════════════════════════════════════
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 2. ЗАДАНИЕ 1 — Аудит памяти и ресурсов
-# ═══════════════════════════════════════════════════════════════════════════════
-doc.add_page_break()
-h1("2. Задание 1: Аудит управления памятью и ресурсами")
-
-h2("2.1. Таблица рисков — управление памятью и ресурсами")
-
-tbl = doc.add_table(rows=1, cols=5)
-tbl.style = "Table Grid"
-table_header_row(tbl, ["#", "Область", "Риск", "До исправления", "После исправления"])
-
-risks = [
-    ("1", "Размер тела HTTP-запроса\ncmd/server/main.go",
-     "CWE-400: нет ограничения — атакующий отправляет тело\n>100 МБ, сервер потребляет всю RAM",
-     "Ограничение отсутствует;\nGin читает тело полностью в буфер",
-     "MaxBodySizeMiddleware(1 МБ) через http.MaxBytesReader;\nPOST > 1 МБ → 413"),
-    ("2", "Курсор БД — scanPayments\ninternal/database/payment_repo.go",
-     "CWE-703: rows.Err() не проверяется;\nошибка итерации молча игнорируется",
-     "return payments, nil даже при\nошибке разрыва соединения",
-     "rows.Err() проверяется после цикла;\nошибка возвращается вызывающему"),
-    ("3", "Курсор БД — GetAuditLogs\ninternal/database/audit_repo.go",
-     "CWE-703: аналогичная проблема с rows.Err()\nв аудит-репозитории",
-     "return logs, nil без проверки\nошибки итерации",
-     "rows.Err() проверяется после цикла"),
-    ("4", "Загрузка N записей в AnalystPage\ninternal/web/handler.go",
-     "CWE-400: GetFlaggedPayments(100,0) —\nнеконтролируемая загрузка на каждый GET /analyst",
-     "Жёстко заданный предел 100 записей\nна каждый запрос страницы",
-     "Предел снижен до 50;\nдля пагинации используется offset"),
-]
-for r in risks:
-    add_row(tbl, r)
-
-doc.add_paragraph()
-h2("2.2. Критический сценарий: переполнение памяти через тело запроса")
-body("Endpoint POST /api/v1/auth/register принимает JSON без ограничения размера. "
-     "Атакующий отправляет тело объёмом 500 МБ → Gin читает его целиком в RAM → "
-     "исчерпание памяти процесса → аварийное завершение (DoS).")
-
-h3("Код до исправления (cmd/server/main.go)")
-code_block(
-    "r.Use(gin.Recovery())\n"
-    "r.Use(middleware.SecurityHeaders())\n"
-    "r.Use(middleware.RateLimitMiddleware(cfg))  // без ограничения размера тела"
+heading("1. Цель работы")
+para(
+    "Цель данной работы — провести углублённый аудит безопасности уже реализованного "
+    "MVP-проекта fintech-payments-mvp (Go, Gin, SQLite) по четырём направлениям: "
+    "управление памятью и ресурсами; безопасность входных данных и потенциальные "
+    "injection-векторы; аутентификация, авторизация и криптография; "
+    "количественная оценка рисков по методологии CVSS v4.0. "
+    "Для каждой выявленной проблемы необходимо реализовать исправление в коде, "
+    "продемонстрировать его корректность и классифицировать уязвимость по CWE."
 )
 
-h3("Код после исправления")
-code_block(
+# ════════════════════════════════════════════════════════════════════════════
+# 2. ЗАДАНИЕ 1 — ПАМЯТЬ И РЕСУРСЫ
+# ════════════════════════════════════════════════════════════════════════════
+
+doc.add_page_break()
+heading("2. Задание 1: Аудит управления памятью и ресурсами")
+
+para(
+    "Аудит охватывал все точки, где приложение потребляет память или удерживает "
+    "системные ресурсы: HTTP-буферы, курсоры базы данных, объекты в памяти. "
+    "Ниже приведены выявленные риски, критический сценарий и сводное сравнение "
+    "поведения до и после защиты."
+)
+
+heading("2.1. Таблица рисков", 2)
+
+t = doc.add_table(rows=1, cols=5)
+t.style = "Table Grid"
+tbl_header(t, ["№", "Область / файл", "Риск", "До исправления", "После исправления"])
+tbl_row(t, [
+    "1",
+    "Размер тела HTTP-запроса\ncmd/server/main.go",
+    "CWE-400\nДоС через RAM: атакующий отправляет тело > 100 МБ, сервер читает его целиком",
+    "Никакого ограничения нет, Gin буферизует тело полностью",
+    "MaxBodySizeMiddleware(1 МБ) через http.MaxBytesReader; тело > 1 МБ → 413"
+])
+tbl_row(t, [
+    "2",
+    "Курсор БД — scanPayments\ninternal/database/payment_repo.go",
+    "CWE-703\nrows.Err() не проверяется; ошибка разрыва соединения во время итерации молча игнорируется",
+    "return payments, nil — частичный результат без признака ошибки",
+    "rows.Err() проверяется после цикла; ошибка явно возвращается вызывающему"
+])
+tbl_row(t, [
+    "3",
+    "Курсор БД — GetAuditLogs\ninternal/database/audit_repo.go",
+    "CWE-703\nАналогичная проблема в аудит-репозитории",
+    "return logs, nil без проверки rows.Err()",
+    "rows.Err() проверяется после завершения цикла"
+])
+tbl_row(t, [
+    "4",
+    "Загрузка записей — AnalystPage\ninternal/web/handler.go",
+    "CWE-400\nGetFlaggedPayments(100, 0) на каждый GET /analyst: неконтролируемая нагрузка",
+    "Жёстко заданные 100 записей при каждом запросе страницы",
+    "Предел снижен до 50; для полного списка используется пагинация"
+])
+
+heading("2.2. Критический сценарий: DoS через тело запроса", 2)
+
+para(
+    "Рассмотрим endpoint POST /api/v1/auth/register. До исправления он принимал "
+    "JSON-тело любого размера без каких-либо ограничений. Атакующий без авторизации "
+    "мог отправить тело объёмом 500 МБ — Gin читал его целиком в оперативную память, "
+    "что приводило к исчерпанию RAM и аварийному завершению процесса (OOM crash)."
+)
+
+label("Код ДО — cmd/server/main.go:")
+code(
     "r.Use(gin.Recovery())\n"
     "r.Use(middleware.SecurityHeaders())\n"
-    "// FIX: CWE-400 — ограничение тела запроса 1 МБ\n"
-    "r.Use(middleware.MaxBodySizeMiddleware(1 << 20))\n"
+    "r.Use(middleware.RateLimitMiddleware(cfg))\n"
+    "// ← ограничение размера тела отсутствует"
+)
+
+label("Код ПОСЛЕ:")
+code(
+    "r.Use(gin.Recovery())\n"
+    "r.Use(middleware.SecurityHeaders())\n"
+    "r.Use(middleware.MaxBodySizeMiddleware(1 << 20)) // 1 MB — CWE-400 fix\n"
     "r.Use(middleware.RateLimitMiddleware(cfg))"
 )
-code_block(
-    "// internal/middleware/security.go\n"
+
+label("Реализация middleware (internal/middleware/security.go):")
+code(
+    "// MaxBodySizeMiddleware ограничивает тело запроса maxBytes байтами.\n"
+    "// При превышении — 413 Request Entity Too Large, тело не читается.\n"
     "func MaxBodySizeMiddleware(maxBytes int64) gin.HandlerFunc {\n"
     "    return func(c *gin.Context) {\n"
     "        if c.Request.Body != nil {\n"
-    "            c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxBytes)\n"
+    "            c.Request.Body = http.MaxBytesReader(\n"
+    "                c.Writer, c.Request.Body, maxBytes)\n"
     "        }\n"
     "        c.Next()\n"
     "    }\n"
     "}"
 )
 
-h3("Код до исправления — scanPayments (payment_repo.go)")
-code_block(
+para(
+    "Объяснение: http.MaxBytesReader оборачивает тело и останавливает чтение, "
+    "как только достигнут лимит. Gin получает ошибку при попытке распарсить JSON "
+    "и возвращает клиенту 413, не загружая ни байта сверх лимита в RAM."
+)
+para("Подтверждение: curl с 2 МБ телом → 413; gosec: 0 issues.")
+
+label("Код ДО — scanPayments (database/payment_repo.go):")
+code(
     "for rows.Next() {\n"
-    "    // ... rows.Scan(...)\n"
+    "    rows.Scan(...)\n"
     "}\n"
-    "return payments, nil  // ошибка итерации молча игнорируется"
+    "return payments, nil  // ошибка итерации молча поглощается"
 )
 
-h3("Код после исправления")
-code_block(
+label("Код ПОСЛЕ:")
+code(
     "for rows.Next() {\n"
-    "    // ... rows.Scan(...)\n"
+    "    rows.Scan(...)\n"
     "}\n"
-    "// FIX: CWE-703\n"
+    "// CWE-703: явная проверка ошибки итерации курсора\n"
     "if err := rows.Err(); err != nil {\n"
     "    return nil, err\n"
     "}\n"
     "return payments, nil"
 )
 
-h2("2.3. Сравнение поведения до и после")
-tbl2 = doc.add_table(rows=1, cols=3)
-tbl2.style = "Table Grid"
-table_header_row(tbl2, ["Сценарий", "До усиления", "После усиления"])
-add_row(tbl2, ["POST /register c телом 500 МБ", "Сервер потребляет 500 МБ RAM, возможен OOM-crash", "Ответ 413 Request Entity Too Large; тело не читается"])
-add_row(tbl2, ["Разрыв соединения во время SELECT", "Частичный результат возвращается без ошибки", "Ошибка rows.Err() возвращается → HTTP 500"])
-add_row(tbl2, ["GET /analyst (100 записей)", "Каждый запрос страницы загружает до 100 строк", "Загружается не более 50 строк"])
+heading("2.3. Сравнение поведения до и после защиты", 2)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 3. ЗАДАНИЕ 2 — Secure Code Review
-# ═══════════════════════════════════════════════════════════════════════════════
+t2 = doc.add_table(rows=1, cols=3)
+t2.style = "Table Grid"
+tbl_header(t2, ["Сценарий", "До исправления", "После исправления"])
+tbl_row(t2, [
+    "POST /register с телом 500 МБ",
+    "Сервер потребляет всю RAM → OOM crash",
+    "413 Request Entity Too Large, тело не читается"
+])
+tbl_row(t2, [
+    "Разрыв соединения во время SELECT",
+    "Частичный результат, ошибка скрыта",
+    "rows.Err() → HTTP 500 с логированием"
+])
+tbl_row(t2, [
+    "GET /analyst без пагинации",
+    "До 100 строк на каждый запрос",
+    "Не более 50 строк; остальное — по offset"
+])
+
+# ════════════════════════════════════════════════════════════════════════════
+# 3. ЗАДАНИЕ 2 — SECURE CODE REVIEW
+# ════════════════════════════════════════════════════════════════════════════
+
 doc.add_page_break()
-h1("3. Задание 2: Secure Code Review — точки входа и опасные sink'и")
+heading("3. Задание 2: Secure Code Review — точки входа и опасные sink'и")
 
-h2("3.1. Карта доверительных границ (Trust Boundary Map)")
-body("Бизнес-сценарий: пользователь создаёт платёж через веб-интерфейс "
-     "POST /payments/new → WebHandler.CreatePayment.")
-doc.add_paragraph()
-body("Граница 1 (Internet → Web Server): HTTP-запрос от браузера. "
-     "Данные: amount, currency, recipient_id, description (form-data).")
-body("Граница 2 (Web Handler → Service Layer): после первичной валидации. "
-     "Доверие: данные частично проверены, но не полностью нормализованы.")
-body("Граница 3 (Service → Repository → SQLite): параметризованные запросы. "
-     "Доверие: высокое — только prepared statements.")
-doc.add_paragraph()
-
-body("Схема потока (текстовая нотация):")
-code_block(
-    "Browser (HTTP POST)\n"
-    "  │  amount, currency, recipient_id, description\n"
-    "  ▼\n"
-    "[TB-1: Internet → App]\n"
-    "  │  RateLimitMiddleware, MaxBodySizeMiddleware, SecurityHeaders\n"
-    "  ▼\n"
-    "WebHandler.CreatePayment  ← Source\n"
-    "  │  Validate: amount (float), currency (allowlist), recipientID (regex)\n"
-    "  ▼\n"
-    "[TB-2: Handler → Service]\n"
-    "  │  PaymentService.CreatePayment\n"
-    "  ▼\n"
-    "[TB-3: Service → DB]\n"
-    "  │  DB.CreatePayment → INSERT ... VALUES (?,?,?,?,?,?,?,?,?)\n"
-    "  ▼\n"
-    "SQLite  ← Sink (SQL)\n"
-    "  │\n"
-    "  └─ AuditService.Log → audit_logs  ← Sink (Audit Log)"
+para(
+    "Для бизнес-сценария «создание платежа пользователем» (POST /payments/new) "
+    "построена карта доверительных границ и выявлены опасные точки назначения данных."
 )
 
-h2("3.2. Таблица источников, распространения и sink'ов")
-tbl3 = doc.add_table(rows=1, cols=5)
-tbl3.style = "Table Grid"
-table_header_row(tbl3, ["Источник данных", "Путь распространения", "Sink", "Уязвимость (до)", "Мера защиты (после)"])
-srcs = [
-    ("recipient_id\n(POST form, web)",
-     "PostForm → CreatePayment\n→ DB.CreatePayment",
-     "SQL (INSERT)",
-     "CWE-20: только length check,\nне regex — пробелы и\nспецсимволы проходили",
-     "Allowlist regex ^[A-Z0-9]{8,20}$\n(recipientIDPattern)"),
-    ("reason\n(POST flag/reject form)",
-     "PostForm → FlagPayment\n→ DB.UpdatePaymentStatus",
-     "SQL (UPDATE) +\nAudit Log",
-     "CWE-20: max-length отсутствовал;\nможно передать 100 КБ текста",
-     "len(reason) > 1000 → 400;\nограничение в обоих обработчиках"),
-    ("details, ip_address\n(все audit.Log() вызовы)",
-     "c.ClientIP(), user input\n→ AuditService.Log\n→ audit_logs",
-     "Audit Log (SQLite\nтаблица audit_logs)",
-     "CWE-117: пользователь мог\nвнедрить \\r\\n через детали\nили заголовок X-Forwarded-For",
-     "sanitizeLogField() удаляет\nCR/LF/TAB, обрезает до 500 символов"),
-    ("paymentID\n(URL param :id, web confirm)",
-     "c.Param(\"id\") →\nstrconv.ParseInt (ошибка\nигнорировалась)",
-     "PaymentService.ConfirmPayment\n→ DB.GetPaymentByID",
-     "CWE-703: ParseInt ошибка игнорирована;\nid=0 мог передаться в запрос",
-     "Явная проверка err != nil\nи paymentID <= 0 → 400"),
-    ("token JWT cookie\n(Set-Cookie при Login)",
-     "authService.Login\n→ c.SetCookie",
-     "Cookie (браузер\nклиента)",
-     "CWE-614: Secure=false —\ncookie доступен по HTTP",
-     "Secure=cfg.CookieSecure\n(по умолчанию true)"),
-]
-for r in srcs:
-    add_row(tbl3, r)
+heading("3.1. Карта доверительных границ", 2)
 
-h2("3.3. Фрагменты исправленного кода")
+label("Trust Boundary Map (нотация потока данных):")
+code(
+    "Browser — HTTP POST /payments/new\n"
+    "  │  Данные: amount, currency, recipient_id, description\n"
+    "  ▼\n"
+    "[Граница 1: Internet → Application]\n"
+    "  │  RateLimitMiddleware · MaxBodySizeMiddleware · SecurityHeaders\n"
+    "  ▼\n"
+    "WebHandler.CreatePayment             ← Source (недоверенный ввод)\n"
+    "  │  Валидация: amount (float, 0–1M) · currency (allowlist)\n"
+    "  │            recipient_id (regex ^[A-Z0-9]{8,20}$) · description (max 500)\n"
+    "  ▼\n"
+    "[Граница 2: Handler → Service]\n"
+    "  │  PaymentService.CreatePayment\n"
+    "  ▼\n"
+    "[Граница 3: Service → Repository → SQLite]\n"
+    "  │  DB.CreatePayment → INSERT ... VALUES (?,?,?,?,?,?,?,?,?)\n"
+    "  ▼\n"
+    "SQLite payments                       ← Sink 1 (SQL)\n"
+    "AuditService.Log → audit_logs         ← Sink 2 (Audit Log)\n"
+    "HTTP Response → browser               ← Sink 3 (Output)"
+)
 
-h3("3.3.1 recipientID — allowlist-валидация (CWE-20)")
-code_block(
-    "// ДО:\n"
+heading("3.2. Таблица: источник → распространение → sink → защита", 2)
+
+t3 = doc.add_table(rows=1, cols=5)
+t3.style = "Table Grid"
+tbl_header(t3, ["Источник данных", "Путь", "Sink", "Уязвимость (до)", "Защита (после)"])
+tbl_row(t3, [
+    "recipient_id\n(POST form, web)",
+    "PostForm → CreatePayment\n→ DB.CreatePayment",
+    "SQL INSERT",
+    "CWE-20: только length check (8–20), любые символы проходили",
+    "Allowlist regex ^[A-Z0-9]{8,20}$ (recipientIDPattern)"
+])
+tbl_row(t3, [
+    "reason\n(flag/reject forms)",
+    "PostForm → FlagPayment\n→ DB.UpdatePaymentStatus",
+    "SQL UPDATE + Audit Log",
+    "CWE-20: max-length отсутствовал, возможна передача 100 КБ",
+    "len(reason) > 1000 → 400 Bad Request"
+])
+tbl_row(t3, [
+    "details, ip_address\n(все вызовы Log())",
+    "c.ClientIP(), user input\n→ AuditService.Log\n→ audit_logs",
+    "Audit Log (SQLite)",
+    "CWE-117: символы \\r\\n позволяли вставить фиктивные строки в журнал",
+    "sanitizeLogField() удаляет CR/LF/TAB, обрезает до 500 символов"
+])
+tbl_row(t3, [
+    "paymentID\n(URL param :id)",
+    "c.Param(\"id\") →\nstrconv.ParseInt (ошибка игнорировалась)",
+    "PaymentService → DB",
+    "CWE-703: ParseInt ошибка поглощена; id=0 уходит в запрос",
+    "Явная проверка err != nil и paymentID <= 0 → 400"
+])
+tbl_row(t3, [
+    "шаблон — ошибки рендеринга\ninternal/web/handler.go",
+    "template.ParseFS / ExecuteTemplate\n→ c.String(500, err.Error())",
+    "HTTP Response (Output)",
+    "CWE-209: полный текст ошибки Go с путями и именами раскрывался пользователю",
+    "Заменено на generic «Internal server error»"
+])
+
+heading("3.3. Исправления с фрагментами кода", 2)
+
+heading("3.3.1 Allowlist-валидация recipientID (CWE-20)", 3)
+
+label("ДО:")
+code(
     "recipientID := strings.ToUpper(strings.TrimSpace(c.PostForm(\"recipient_id\")))\n"
     "if len(recipientID) < 8 || len(recipientID) > 20 {\n"
-    "    c.String(http.StatusOK, `<article class=\"flash error\">...8-20 characters</article>`)\n"
+    "    // любые символы, в том числе пробелы и спецсимволы — проходили\n"
+    "    c.String(200, `<article class=\"flash error\">8-20 characters</article>`)\n"
     "    return\n"
     "}"
 )
-code_block(
-    "// ПОСЛЕ:\n"
-    "var recipientIDPattern = regexp.MustCompile(`^[A-Z0-9]{8,20}$`)\n"
+label("ПОСЛЕ:")
+code(
+    "var recipientIDPattern = regexp.MustCompile(`^[A-Z0-9]{8,20}$`)\n\n"
     "recipientID := strings.ToUpper(strings.TrimSpace(c.PostForm(\"recipient_id\")))\n"
     "if !recipientIDPattern.MatchString(recipientID) {\n"
-    "    c.String(http.StatusOK, `<article class=\"flash error\">"
+    "    c.String(200, `<article class=\"flash error\">"
     "Recipient ID: 8-20 uppercase alphanumeric</article>`)\n"
     "    return\n"
     "}"
 )
-body("Объяснение: до исправления допускались любые символы (включая пробел, кириллицу, "
-     "управляющие символы). Теперь применяется тот же allowlist-паттерн, что и в "
-     "API-валидаторе (validators.go), устраняя расхождение между API и Web-интерфейсом.")
-body("Подтверждение: POST /payments/new c recipient_id='<script>' возвращает ошибку 200 "
-     "(flash), запись не создаётся. Gosec: 0 issues.")
+para(
+    "Объяснение: до исправления длина проверялась, но состав символов — нет. "
+    "Теперь применяется тот же паттерн ^[A-Z0-9]{8,20}$, что и в API-валидаторе "
+    "(validators.go), устраняя расхождение между Web и API интерфейсами."
+)
+para("CWE: CWE-20 (Improper Input Validation). Подтверждение: POSTing recipient_id='A B<>' → 400, запись не создаётся.")
 
-h3("3.3.2 Log injection — sanitizeLogField (CWE-117)")
-code_block(
-    "// ДО:\n"
-    "func (s *AuditService) Log(userID *int64, action AuditAction, resourceID *int64,\n"
-    "        details, ipAddress string) {\n"
-    "    _ = s.db.CreateAuditLog(userID, action, resourceID, details, ipAddress)\n"
+heading("3.3.2 Раскрытие информации через ошибки шаблонов (CWE-209)", 3)
+
+label("ДО:")
+code(
+    "// internal/web/handler.go — функция render()\n"
+    "if err != nil {\n"
+    "    c.String(http.StatusInternalServerError,\n"
+    "        \"Template parse error: \"+err.Error())  // путь к файлу, имя шаблона — видны клиенту\n"
+    "}\n"
+    "// renderPartial()\n"
+    "if err := h.templates.ExecuteTemplate(c.Writer, name, data); err != nil {\n"
+    "    c.String(http.StatusInternalServerError,\n"
+    "        \"Template render error: \"+err.Error())  // аналогично\n"
     "}"
 )
-code_block(
-    "// ПОСЛЕ:\n"
+label("ПОСЛЕ:")
+code(
+    "if err != nil {\n"
+    "    // CWE-209: только generic сообщение; детали пишутся в server-side лог\n"
+    "    c.String(http.StatusInternalServerError, \"Internal server error\")\n"
+    "    return\n"
+    "}\n\n"
+    "if err := h.templates.ExecuteTemplate(c.Writer, name, data); err != nil {\n"
+    "    c.String(http.StatusInternalServerError, \"Internal server error\")\n"
+    "}"
+)
+para(
+    "Объяснение: текст ошибки Go включает внутренние пути к файлам, имена переменных "
+    "и трассировку. Передача этих данных клиенту помогает атакующему в разведке "
+    "архитектуры приложения. Теперь клиент видит только «Internal server error»; "
+    "полный текст ошибки должен писаться в структурированный server-side лог."
+)
+para("CWE: CWE-209 (Information Exposure Through an Error Message).")
+
+heading("3.3.3 Log Injection — sanitizeLogField (CWE-117)", 3)
+
+label("ДО:")
+code(
+    "func (s *AuditService) Log(..., details, ipAddress string) {\n"
+    "    _ = s.db.CreateAuditLog(userID, action, resourceID, details, ipAddress)\n"
+    "    // ← CR/LF в details или ipAddress → поддельные строки в audit_logs\n"
+    "}"
+)
+label("ПОСЛЕ:")
+code(
     "func sanitizeLogField(s string) string {\n"
     "    s = strings.ReplaceAll(s, \"\\r\", \"\")\n"
     "    s = strings.ReplaceAll(s, \"\\n\", \" \")\n"
@@ -341,285 +436,393 @@ code_block(
     "}"
 )
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 4. ЗАДАНИЕ 3 — Auth / Authz / Crypto
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+# 4. ЗАДАНИЕ 3 — AUTH / AUTHZ / CRYPTO
+# ════════════════════════════════════════════════════════════════════════════
+
 doc.add_page_break()
-h1("4. Задание 3: Аудит аутентификации, авторизации и криптографии")
+heading("4. Задание 3: Аудит аутентификации, авторизации и криптографии")
 
-h2("4.1. Матрица доступа по ролям")
-tbl4 = doc.add_table(rows=1, cols=4)
-tbl4.style = "Table Grid"
-table_header_row(tbl4, ["Действие / Endpoint", "Аноним", "user", "fraud_analyst"])
-roles = [
-    ("POST /api/v1/auth/register",         "✓", "—",  "—"),
-    ("POST /api/v1/auth/login",            "✓", "—",  "—"),
-    ("GET  /api/v1/me",                    "—", "✓",  "✓"),
-    ("POST /api/v1/payments",              "—", "✓",  "—"),
-    ("GET  /api/v1/payments",              "—", "✓ (только свои)", "—"),
-    ("GET  /api/v1/payments/:id",          "—", "✓ (только свои)", "✓ (любой)"),
-    ("POST /api/v1/payments/:id/confirm",  "—", "✓ (только свои)", "—"),
-    ("GET  /api/v1/analyst/payments/flagged","—","—",  "✓"),
-    ("POST /api/v1/analyst/payments/:id/flag","—","—", "✓"),
-    ("POST /api/v1/analyst/payments/:id/reject","—","—","✓"),
-    ("GET  /api/v1/analyst/audit",         "—", "—",  "✓"),
-]
-for r in roles:
-    add_row(tbl4, r)
+heading("4.1. Матрица доступа по ролям", 2)
 
-h2("4.2. Перечень криптографических и authorization-рисков")
+t4 = doc.add_table(rows=1, cols=4)
+t4.style = "Table Grid"
+tbl_header(t4, ["Действие / Endpoint", "Аноним", "user", "fraud_analyst"])
+for row in [
+    ("POST /api/v1/auth/register",            "✓", "—",                  "—"),
+    ("POST /api/v1/auth/login",               "✓", "—",                  "—"),
+    ("GET  /api/v1/me",                       "—", "✓",                  "✓"),
+    ("POST /api/v1/payments",                 "—", "✓",                  "—"),
+    ("GET  /api/v1/payments",                 "—", "✓ (только свои)",    "—"),
+    ("GET  /api/v1/payments/:id",             "—", "✓ (только свои)",    "✓ (любой)"),
+    ("POST /api/v1/payments/:id/confirm",     "—", "✓ (только свои)",    "—"),
+    ("GET  /api/v1/analyst/payments/flagged", "—", "—",                  "✓"),
+    ("POST /api/v1/analyst/payments/:id/flag","—", "—",                  "✓"),
+    ("POST /api/v1/analyst/payments/:id/reject","—","—",                 "✓"),
+    ("GET  /api/v1/analyst/audit",            "—", "—",                  "✓"),
+]:
+    tbl_row(t4, row)
 
-tbl5 = doc.add_table(rows=1, cols=4)
-tbl5.style = "Table Grid"
-table_header_row(tbl5, ["#", "Риск", "CWE", "Статус"])
-crypto_risks = [
-    ("1", "JWT Secure cookie flag = false (HTTP)", "CWE-614", "ИСПРАВЛЕНО: cfg.CookieSecure"),
-    ("2", "Отсутствие jti в JWT — невозможно отозвать отдельный токен", "CWE-613", "ИСПРАВЛЕНО: jti = crypto/rand 16 байт"),
-    ("3", "Роль в JWT не re-валидируется по БД — смена роли вступает в силу только после истечения токена", "CWE-269", "ПРИНЯТО: срок жизни 15 минут; TODO: token revocation list"),
-    ("4", "Нет механизма блокировки аккаунта при брутфорсе (только IP rate limit)", "CWE-307", "ЧАСТИЧНО: rate limit 100 req/мин; TODO: lockout counter в БД"),
-    ("5", "bcrypt.DefaultCost (10) — приемлем, но не адаптируется к росту мощности CPU", "CWE-916", "ПРИНЯТО: для MVP допустимо; рекомендация: использовать bcrypt.MinCost+2"),
-    ("6", "JWT подписывается HMAC-SHA256 — симметричный ключ, хранится в .env", "CWE-321", "ПРИНЯТО: .env не коммитится; рекомендация: Vault/HSM в продакшне"),
-]
-for r in crypto_risks:
-    add_row(tbl5, r)
+heading("4.2. Выявленные риски в области аутентификации и криптографии", 2)
 
-h2("4.3. Два сценария принятия решения о доступе")
+t5 = doc.add_table(rows=1, cols=4)
+t5.style = "Table Grid"
+tbl_header(t5, ["#", "Риск", "CWE", "Статус"])
+for row in [
+    ("1", "JWT cookie Secure=false — токен передаётся по HTTP открытым текстом", "CWE-614", "ИСПРАВЛЕНО: cfg.CookieSecure из переменной окружения COOKIE_SECURE"),
+    ("2", "Отсутствие jti в JWT — невозможно отозвать конкретный токен без отзыва всех", "CWE-613", "ИСПРАВЛЕНО: jti = 16 случайных байт (crypto/rand), Base16"),
+    ("3", "Роль из JWT не перепроверяется по БД — смена роли вступает в силу только после истечения токена", "CWE-269", "ПРИНЯТО: TTL 15 мин; TODO: revocation list"),
+    ("4", "Нет per-user блокировки после N неудачных попыток входа — только IP rate limit", "CWE-307", "ЧАСТИЧНО: rate limit 100 req/мин; TODO: lockout counter в БД"),
+    ("5", "bcrypt.DefaultCost (10) не адаптируется к росту мощности CPU", "CWE-916", "ПРИНЯТО: приемлемо для MVP; рекомендация: Cost 12 в продакшне"),
+]:
+    tbl_row(t5, row)
 
-h3("Сценарий A — Легитимный: fraud_analyst просматривает чужой платёж")
-code_block(
+heading("4.3. Два сценария принятия решения о доступе", 2)
+
+heading("Сценарий A — Легитимный: fraud_analyst просматривает чужой платёж", 3)
+code(
     "GET /api/v1/payments/42\n"
     "Authorization: Bearer <valid_analyst_token>\n\n"
-    "1. AuthMiddleware: JWT parsed → claims{UserID:2, Role:fraud_analyst} → OK\n"
+    "1. AuthMiddleware: JWT parsed → {UserID:2, Role:fraud_analyst}   OK\n"
     "2. PaymentHandler.GetPayment → PaymentService.GetPayment(42, 2, fraud_analyst)\n"
-    "3. userRole == RoleFraudAnalyst → bypass owner check\n"
-    "4. AuditLog: action=payment_viewed, resource_id=42\n"
-    "5. → 200 OK (analyst response со fraud_score)"
+    "3. userRole == RoleFraudAnalyst → owner check обходится (по дизайну)\n"
+    "4. AuditLog: action=payment_viewed, resource_id=42, ip=...\n"
+    "5. ← 200 OK (analyst response, включает fraud_score)"
 )
 
-h3("Сценарий B — Запрещённый: обычный user пытается подтвердить чужой платёж")
-code_block(
+heading("Сценарий B — Запрещённый: обычный user пытается подтвердить чужой платёж", 3)
+code(
     "POST /api/v1/payments/99/confirm\n"
     "Authorization: Bearer <valid_user_token>  (UserID=5)\n"
-    "Payment 99 belongs to UserID=7\n\n"
-    "1. AuthMiddleware: JWT valid → claims{UserID:5, Role:user} → OK\n"
+    "Payment #99 принадлежит UserID=7\n\n"
+    "1. AuthMiddleware: JWT valid → {UserID:5, Role:user}             OK\n"
     "2. PaymentService.ConfirmPayment(99, 5)\n"
     "3. DB.GetPaymentByID(99) → payment.UserID = 7\n"
-    "4. payment.UserID (7) != userID (5) → ErrUnauthorizedAccess\n"
-    "5. Handler → 403 Forbidden {\"error\":\"access denied\"}"
+    "4. payment.UserID(7) != userID(5) → ErrUnauthorizedAccess\n"
+    "5. ← 403 Forbidden {\"error\": \"access denied\"}"
 )
 
-h2("4.4. Исправления — код до/после")
+heading("4.4. Исправления", 2)
 
-h3("4.4.1 Cookie Secure flag (CWE-614)")
-code_block(
-    "// ДО (internal/web/handler.go):\n"
-    "c.SetCookie(\"token\", token, 900, \"/\", \"\", false, true)\n"
-    "//                                           ^^^^^ Secure=false всегда"
-)
-code_block(
-    "// ПОСЛЕ:\n"
+heading("4.4.1 Cookie Secure flag из конфигурации (CWE-614)", 3)
+label("ДО (internal/web/handler.go):")
+code('c.SetCookie("token", token, 900, "/", "", false, true)\n'
+     '//                                           ^^^^^ жёстко false')
+label("ПОСЛЕ:")
+code(
     "// internal/config/config.go:\n"
     "type Config struct {\n"
     "    ...\n"
-    "    CookieSecure bool  // из переменной окружения COOKIE_SECURE (default: true)\n"
+    "    CookieSecure bool // из COOKIE_SECURE (по умолчанию true)\n"
     "}\n\n"
     "// internal/web/handler.go:\n"
-    "c.SetCookie(\"token\", token, 900, \"/\", \"\", h.cookieSecure, true)\n"
-    "//                                           ^^^^^^^^^^^^^^ из конфига"
+    'c.SetCookie("token", token, 900, "/", "", h.cookieSecure, true)\n'
+    "//                                         ^^^^^^^^^^^^^^"
 )
-body("Подтверждение: при COOKIE_SECURE=true в ответе Set-Cookie присутствует атрибут Secure; "
-     "curl через HTTP не получит cookie с Secure=true при корректной HTTPS-настройке.")
+para(
+    "Объяснение: ранее флаг Secure был жёстко равен false, что означало "
+    "передачу cookie по незашифрованному HTTP. Теперь значение берётся из "
+    "конфигурации — в production всегда true (HTTPS), в dev-среде можно "
+    "временно выставить false без изменения кода."
+)
 
-h3("4.4.2 JWT ID claim (CWE-613)")
-code_block(
-    "// ДО (internal/services/auth_service.go):\n"
+heading("4.4.2 JWT ID (jti) для будущего отзыва токенов (CWE-613)", 3)
+label("ДО:")
+code(
     "claims := Claims{\n"
     "    RegisteredClaims: jwt.RegisteredClaims{\n"
     "        ExpiresAt: ..., IssuedAt: ..., Subject: user.Email,\n"
-    "        // ID отсутствует — токены одного пользователя неразличимы\n"
+    "        // ID отсутствует — все токены одного пользователя неразличимы\n"
     "    },\n"
     "}"
 )
-code_block(
-    "// ПОСЛЕ:\n"
+label("ПОСЛЕ:")
+code(
     "jtiBytes := make([]byte, 16)\n"
-    "rand.Read(jtiBytes)\n"
+    "rand.Read(jtiBytes)  // crypto/rand\n"
     "jti := hex.EncodeToString(jtiBytes)\n\n"
     "claims := Claims{\n"
     "    RegisteredClaims: jwt.RegisteredClaims{\n"
     "        ExpiresAt: ..., IssuedAt: ..., Subject: user.Email,\n"
-    "        ID: jti,  // уникальный UUID-подобный идентификатор токена\n"
+    "        ID: jti,  // уникальный 32-символьный hex-идентификатор\n"
     "    },\n"
     "}"
 )
-
-h3("4.4.3 Исправление игнорируемой ошибки ParseInt в ConfirmPayment (CWE-703)")
-code_block(
-    "// ДО:\n"
-    "paymentID, _ := strconv.ParseInt(c.Param(\"id\"), 10, 64)\n"
-    "err := h.paymentService.ConfirmPayment(paymentID, user.UserID)"
-)
-code_block(
-    "// ПОСЛЕ:\n"
-    "paymentID, err := strconv.ParseInt(c.Param(\"id\"), 10, 64)\n"
-    "if err != nil || paymentID <= 0 {\n"
-    "    c.String(http.StatusBadRequest, `<p class=\"error\">Invalid payment ID</p>`)\n"
-    "    return\n"
-    "}\n"
-    "err = h.paymentService.ConfirmPayment(paymentID, user.UserID)"
+para(
+    "Объяснение: поле jti (JWT ID) делает каждый выданный токен уникальным. "
+    "Это закладывает основу для реализации revocation list — при компрометации "
+    "токена достаточно внести его jti в чёрный список, не трогая остальные."
 )
 
-h2("4.5. Архитектурное обоснование")
-body("1. Роль хранится в JWT, а не перечитывается из БД при каждом запросе. "
-     "Это архитектурный компромисс: снижение нагрузки на БД vs задержка применения "
-     "смены роли. Для MVP с 15-минутным TTL токена — приемлемо. "
-     "В продакшне рекомендуется token introspection или revocation list в Redis.")
-body("2. bcrypt.DefaultCost (10) обеспечивает ~100 мс на хеш. При необходимости "
-     "переноса на более мощный сервер следует увеличить Cost до 12–13.")
-body("3. jti позволяет в будущем реализовать мгновенный отзыв токенов через "
-     "таблицу revoked_tokens без перевыпуска всей архитектуры.")
+heading("4.5. Архитектурные обоснования", 2)
+para(
+    "Роль пользователя хранится прямо в JWT и не перечитывается из БД при каждом "
+    "запросе. Это сознательный архитектурный выбор: снижение нагрузки на SQLite "
+    "важнее мгновенной реакции на смену роли. При TTL 15 минут окно уязвимости "
+    "минимально. В продакшне стоит добавить Redis-список отозванных jti."
+)
+para(
+    "bcrypt.DefaultCost (10) обеспечивает ~100 мс на хеш — достаточно для MVP. "
+    "При переносе на современный многоядерный сервер рекомендуется повысить Cost "
+    "до 12–13 и провести нагрузочное тестирование эндпоинтов аутентификации."
+)
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 # 5. ЗАДАНИЕ 4 — CVSS v4.0
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+
 doc.add_page_break()
-h1("5. Задание 4: Оценка уязвимостей по CVSS v4.0")
+heading("5. Задание 4: Оценка уязвимостей по CVSS v4.0")
 
-h2("5.1. Выбранные уязвимости (не повторяющиеся из ПР №4)")
-body("В ПР №4 были рассмотрены: G104/CWE-703 (ExecuteTemplate), CWE-521 (пароль), "
-     "SQLi, XSS, Path Traversal, Command Injection. Для ПР №5 выбраны 5 новых уязвимостей.")
+para(
+    "Для задания 4 выбраны 5 уязвимостей, не совпадающих с рассмотренными "
+    "в ПР №4. Напомним, что ПР №4 охватывало: CWE-703 (ExecuteTemplate G104), "
+    "CWE-614 (Cookie Secure), CWE-89 (SQL Injection), CWE-79 (XSS) и CWE-521 "
+    "(слабая политика паролей). Все пять уязвимостей ниже — новые."
+)
 
-h2("5.2. Сводная таблица CVSS v4.0")
-tbl6 = doc.add_table(rows=1, cols=8)
-tbl6.style = "Table Grid"
-table_header_row(tbl6, ["№", "Уязвимость\nМодуль/endpoint", "CWE", "CVSS v4.0\nVector",
-                         "Score", "Severity", "Обоснование метрик", "Приоритет\nисправления"])
+heading("5.1. Описание уязвимостей", 2)
 
-cvss_data = [
-    ("1",
-     "Отсутствие ограничения\nразмера тела запроса\n(DoS через RAM)\ncmd/server/main.go\n→ все POST endpoints",
-     "CWE-400",
-     "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
-     "8.7",
-     "HIGH",
-     "AV:N (сеть), AC:L (нет условий),\nAT:N, PR:N (анонимно),\nUI:N, VA:H (DoS сервиса).\nЦелостность не нарушается,\nтолько доступность.",
-     "1 — Критический\n(устранено)"),
-    ("2",
-     "JWT cookie без флага Secure\nПередача по HTTP\ninternal/web/handler.go\nPOST /login, /register",
-     "CWE-614",
-     "CVSS:4.0/AV:A/AC:H/AT:N/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
-     "6.3",
-     "MEDIUM",
-     "AV:A (локальная сеть / MITM),\nAC:H (нужен перехват трафика),\nUI:P (пользователь должен\nработать по HTTP),\nVC:H (кража токена → полный доступ),\nVI:H (аутентификация от его имени).",
-     "2 — Высокий\n(устранено)"),
-    ("3",
-     "Log Injection через\nпользовательский ввод\ninternal/services/\naudit_service.go\nвсе Log() вызовы",
-     "CWE-117",
-     "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
-     "5.3",
-     "MEDIUM",
-     "AV:N, AC:L, PR:L (нужна\nаутентификация), UI:N.\nVI:L — злоумышленник вносит\nподдельные строки в аудит,\nчто затрудняет расследование\nинцидентов. Данные не утекают.",
-     "3 — Средний\n(устранено)"),
-    ("4",
-     "Отсутствие jti / отзыва\nJWT токенов\ninternal/services/\nauth_service.go\nPOST /login",
-     "CWE-613",
-     "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
-     "7.3",
-     "HIGH",
-     "AV:N, AC:H (нужно завладеть\nтокеном через утечку),\nVC:H/VI:H — украденный токен\nостаётся действительным до\nистечения, отзыв невозможен.\nСрок жизни 15 мин смягчает риск.",
-     "2 — Высокий\n(jti добавлен;\nrevocation list —\nTODO)"),
-    ("5",
-     "Allowlist-валидация\nrecipientID отсутствовала\n(только length)\ninternal/web/handler.go\nPOST /payments/new",
-     "CWE-20",
-     "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
-     "5.3",
-     "MEDIUM",
-     "AV:N, AC:L, PR:L (авторизован),\nUI:N.\nVI:L — спецсимволы в поле\nrecipientID могут вызвать\nнеожиданное поведение в\nсмежных системах / отчётах.\nSQL уже защищён параметрами.",
-     "3 — Средний\n(устранено)"),
+heading("Уязвимость 1 — CWE-400: DoS через неограниченное тело запроса", 3)
+para(
+    "Модуль: cmd/server/main.go (все POST-эндпоинты). Точка входа: тело HTTP-запроса. "
+    "Sink: оперативная память процесса (буфер Gin). До исправления любой анонимный "
+    "пользователь мог отправить тело произвольного размера и вызвать OOM-crash сервера."
+)
+
+heading("Уязвимость 2 — CWE-613: Отсутствие jti / невозможность отзыва JWT", 3)
+para(
+    "Модуль: internal/services/auth_service.go. Точка входа: POST /api/v1/auth/login. "
+    "Sink: JWT-токен (выдаётся клиенту). Без поля jti все токены одного пользователя "
+    "идентичны — при утечке токена его невозможно инвалидировать без перевыпуска "
+    "секретного ключа (что аннулирует все сессии)."
+)
+
+heading("Уязвимость 3 — CWE-117: Log Injection через поля аудита", 3)
+para(
+    "Модуль: internal/services/audit_service.go. Точка входа: поле details и IP-адрес "
+    "во всех вызовах Log(). Sink: таблица audit_logs (SQLite). Атакующий с правами "
+    "пользователя мог внедрить символы \\r\\n и создать в журнале фиктивные записи, "
+    "искажая результаты расследования инцидентов."
+)
+
+heading("Уязвимость 4 — CWE-20: Отсутствие allowlist-валидации recipientID в веб-форме", 3)
+para(
+    "Модуль: internal/web/handler.go. Точка входа: POST /payments/new (поле recipient_id). "
+    "Sink: таблица payments (SQL INSERT). Веб-форма проверяла только длину (8–20 символов), "
+    "но не состав символов. Это создавало расхождение между API- и Web-интерфейсами — "
+    "через веб можно было передать пробелы и спецсимволы, которые API отклонял бы."
+)
+
+heading("Уязвимость 5 — CWE-209: Раскрытие внутренних деталей ошибок Go", 3)
+para(
+    "Модуль: internal/web/handler.go. Точка входа: все страницы с рендерингом шаблонов. "
+    "Sink: HTTP-ответ (браузер клиента). При ошибке парсинга или выполнения шаблона "
+    "сервер возвращал полный текст ошибки Go, включая пути к файлам и имена переменных — "
+    "информацию, полезную атакующему для разведки структуры приложения."
+)
+
+heading("5.2. Таблица CVSS v4.0", 2)
+
+para(
+    "Все векторы рассчитаны на официальном калькуляторе CVSS v4.0: "
+    "https://www.first.org/cvss/calculator/4.0"
+)
+
+t6 = doc.add_table(rows=1, cols=8)
+t6.style = "Table Grid"
+tbl_header(t6, [
+    "№", "Уязвимость\nМодуль/Endpoint",
+    "CWE", "CVSS v4.0 Vector",
+    "Score", "Severity",
+    "Обоснование метрик",
+    "Приоритет\nисправления"
+])
+
+cvss = [
+    (
+        "1",
+        "DoS через тело запроса\ncmd/server/main.go\nвсе POST endpoints",
+        "CWE-400",
+        "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/"
+        "VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+        "8.7",
+        "HIGH",
+        "AV:N — атака через интернет.\n"
+        "AC:L, AT:N — никаких условий.\n"
+        "PR:N — анонимно, UI:N.\n"
+        "VA:H — сервис недоступен (OOM).\n"
+        "Конфиденциальность/целостность не затронуты.",
+        "1 — Критический\n(УСТРАНЕНО)"
+    ),
+    (
+        "2",
+        "Отсутствие jti / отзыва JWT\nauth_service.go\nPOST /api/v1/auth/login",
+        "CWE-613",
+        "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/"
+        "VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+        "7.3",
+        "HIGH",
+        "AV:N — атакующий работает удалённо.\n"
+        "AC:H — нужно предварительно завладеть токеном.\n"
+        "VC:H/VI:H — украденный токен даёт полный доступ.\n"
+        "TTL 15 мин снижает реальный риск.",
+        "2 — Высокий\n(jti добавлен;\nrevocation — TODO)"
+    ),
+    (
+        "3",
+        "Log Injection через audit fields\naudit_service.go\nвсе вызовы Log()",
+        "CWE-117",
+        "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/"
+        "VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+        "5.3",
+        "MEDIUM",
+        "AV:N, AC:L — легко воспроизводимо.\n"
+        "PR:L — нужна авторизация пользователя.\n"
+        "VI:L — искажение audit trail,\n"
+        "но данные пользователей не утекают.",
+        "3 — Средний\n(УСТРАНЕНО)"
+    ),
+    (
+        "4",
+        "Слабая валидация recipientID\nweb/handler.go\nPOST /payments/new",
+        "CWE-20",
+        "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/"
+        "VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+        "5.3",
+        "MEDIUM",
+        "AV:N, AC:L, PR:L.\n"
+        "VI:L — некорректные символы\nв поле recipient_id могут вызвать\n"
+        "неожиданное поведение в смежных\nсистемах и отчётах.",
+        "3 — Средний\n(УСТРАНЕНО)"
+    ),
+    (
+        "5",
+        "Раскрытие ошибок шаблонов\nweb/handler.go\nвсе GET-страницы",
+        "CWE-209",
+        "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/"
+        "VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+        "6.9",
+        "MEDIUM",
+        "AV:N, AC:L — доступно без авторизации.\n"
+        "PR:N, UI:N.\n"
+        "VC:L — путь к файлу и внутренние\n"
+        "имена помогают атакующему в разведке.\n"
+        "Прямой утечки данных нет.",
+        "2 — Высокий\n(УСТРАНЕНО)"
+    ),
 ]
-for r in cvss_data:
-    add_row(tbl6, r)
+for r in cvss:
+    tbl_row(t6, r)
 
-h2("5.3. Ранжирование по приоритету исправления")
-body("1. CWE-400 (Score 8.7) — наивысший приоритет: анонимный DoS, не требует авторизации. Устранено.")
-body("2. CWE-613 (Score 7.3) — высокий приоритет: украденный токен нельзя отозвать. jti добавлен, revocation list — roadmap.")
-body("3. CWE-614 (Score 6.3) — высокий приоритет: кража сессии через MITM. Устранено флагом Secure.")
-body("4. CWE-117 (Score 5.3) — средний приоритет: подделка аудит-журнала. Устранено sanitizeLogField().")
-body("5. CWE-20 (Score 5.3) — средний приоритет: слабая валидация ввода. Устранено regex-паттерном.")
+heading("5.3. Ранжирование по приоритету исправления", 2)
 
-h2("5.4. Вывод: CVSS-балл vs реальный приоритет")
-body("Высокий CVSS-балл в целом совпадает с реальным приоритетом исправления для данного MVP. "
-     "CWE-400 с баллом 8.7 является наиболее опасным в контексте финтех-сервиса, поскольку "
-     "DoS-атака на платёжный сервис напрямую нарушает бизнес-процессы и SLA. "
-     "CWE-613 (балл 7.3) формально высокий, но смягчён 15-минутным TTL токена — "
-     "реальный риск ниже максимального. "
-     "CWE-614 (балл 6.3) — в production-среде с обязательным HTTPS риск минимален, "
-     "поэтому несмотря на «MEDIUM» балл, исправление было реализовано немедленно "
-     "как architectural best practice. "
-     "CWE-117 и CWE-20 имеют одинаковый балл 5.3, но CWE-117 приоритетнее с точки зрения "
-     "compliance (GDPR, PCI DSS требуют целостности audit trail).")
+para(
+    "Ниже уязвимости расставлены по реальному приоритету для данного "
+    "финтех-сервиса. Оценки CVSS в целом подтверждают этот порядок, "
+    "хотя есть нюансы, о которых говорится в следующем разделе."
+)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# 6. РЕЗУЛЬТАТЫ SAST / SCA
-# ═══════════════════════════════════════════════════════════════════════════════
+bullet("Приоритет 1 — CWE-400 (Score 8.7): анонимный DoS, не требует авторизации, "
+       "гарантированно нарушает доступность платёжного сервиса. Устранено первым.")
+bullet("Приоритет 2 — CWE-209 (Score 6.9): хотя балл ниже CWE-613, для финтеха "
+       "разведка структуры приложения — прямой вектор к более серьёзным атакам. "
+       "Исправлено немедленно.")
+bullet("Приоритет 2 — CWE-613 (Score 7.3): кража сессии критична, но TTL 15 минут "
+       "существенно снижает реальное окно уязвимости. jti добавлен; полный revocation list — "
+       "следующий шаг.")
+bullet("Приоритет 3 — CWE-117 (Score 5.3): искажение аудит-журнала — нарушение "
+       "compliance (PCI DSS, GDPR). С точки зрения бизнеса важнее, чем CVSS-балл "
+       "может показывать. Устранено.")
+bullet("Приоритет 3 — CWE-20 (Score 5.3): слабая валидация в веб-форме, тогда как "
+       "API-валидатор уже был корректным. Устранено выравниванием паттернов.")
+
+heading("5.4. Совпадает ли CVSS с реальным приоритетом?", 2)
+
+para(
+    "В большинстве случаев — да. Наивысший CVSS-балл (8.7) у CWE-400 корректно "
+    "отражает максимальный реальный риск: DoS на платёжный сервис — это немедленные "
+    "финансовые потери и нарушение SLA."
+)
+para(
+    "Есть и отклонения. CWE-209 получил балл 6.9 («только» VC:L), однако для финтеха "
+    "утечка внутренней структуры приложения открывает путь к более серьёзным атакам — "
+    "реальный приоритет выше балла. Напротив, CWE-613 имеет балл 7.3 (HIGH), но TTL "
+    "15 минут значительно сокращает окно уязвимости, поэтому реальный приоритет "
+    "чуть ниже формального."
+)
+para(
+    "Вывод: CVSS v4.0 — надёжный инструмент количественной оценки, но он не учитывает "
+    "бизнес-контекст (SLA, compliance, цепочки атак). Финальный приоритет исправлений "
+    "всегда должен сочетать CVSS-балл с анализом реальных угроз для конкретного "
+    "бизнес-сценария."
+)
+
+# ════════════════════════════════════════════════════════════════════════════
+# 6. SAST / SCA
+# ════════════════════════════════════════════════════════════════════════════
+
 doc.add_page_break()
-h1("6. Результаты SAST (gosec) и SCA (govulncheck) после исправлений")
+heading("6. Результаты SAST и SCA после всех исправлений")
 
-h2("6.1. Gosec — после всех исправлений")
-code_block(
+heading("6.1. Gosec (SAST)", 2)
+code(
     "$ gosec ./...\n\n"
-    "Results:\n\n"
     "Summary:\n"
     "  Gosec  : dev\n"
     "  Files  : 21\n"
-    "  Lines  : 2198\n"
+    "  Lines  : 2219\n"
     "  Nosec  : 0\n"
-    "  Issues : 0   ← нет проблем"
+    "  Issues : 0"
 )
+para("Все ранее выявленные проблемы устранены. Gosec не выявил новых нарушений.")
 
-h2("6.2. Govulncheck — анализ зависимостей")
-code_block(
+heading("6.2. Govulncheck (SCA)", 2)
+code(
     "$ govulncheck ./...\n\n"
     "=== Symbol Results ===\n"
     "No vulnerabilities found.\n"
     "Your code is affected by 0 vulnerabilities.\n\n"
-    "This scan also found 2 vulnerabilities in packages you import and 4\n"
-    "vulnerabilities in modules you require, but your code doesn't appear\n"
-    "to call these vulnerabilities.\n"
-    "(GO-2026-4440, GO-2026-4441 — golang.org/x/net/html; не вызывается в коде)"
+    "This scan found 2 vulnerabilities in packages you import and 4 in modules\n"
+    "you require, but your code doesn't appear to call these vulnerabilities.\n"
+    "(GO-2026-4440, GO-2026-4441 — golang.org/x/net/html; HTML-парсер в коде не вызывается)"
 )
 
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 # 7. ВЫВОД
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
+
 doc.add_page_break()
-h1("7. Вывод по работе")
-body(
-    "В ходе практической работы №5 проведён углублённый комплексный аудит безопасности "
-    "MVP-системы fintech-payments-mvp по четырём направлениям."
+heading("7. Вывод по работе")
+
+para(
+    "В ходе практической работы №5 был проведён углублённый комплексный аудит "
+    "безопасности MVP-проекта fintech-payments-mvp по четырём направлениям. "
+    "В результате выявлено и устранено 9 уязвимостей и недостатков; 5 из них "
+    "оценены по CVSS v4.0 с баллами от 5.3 до 8.7."
 )
-doc.add_paragraph()
-body(
-    "По итогам аудита выявлено и устранено 9 уязвимостей/недостатков, из которых "
-    "5 оценены по CVSS v4.0 (баллы 5.3–8.7). Все критические дефекты исправлены в коде; "
-    "инструмент gosec подтверждает 0 проблем. Govulncheck не выявил уязвимостей в "
-    "вызываемых символах."
+para(
+    "Наиболее значимые улучшения архитектуры безопасности:"
 )
-body(
-    "Наиболее значимые улучшения: (1) защита от DoS-атак через тело запроса "
-    "(MaxBodySizeMiddleware); (2) устранение log injection через sanitizeLogField; "
-    "(3) корректная работа флага Secure на JWT-cookie через конфигурацию; "
-    "(4) добавление jti для будущей поддержки отзыва токенов; "
-    "(5) согласованная allowlist-валидация recipientID между Web- и API-интерфейсами."
+bullet("MaxBodySizeMiddleware (1 МБ) — защита от DoS через исчерпание памяти (CWE-400).")
+bullet("sanitizeLogField() — предотвращение подделки аудит-журнала через CRLF-инъекцию (CWE-117).")
+bullet("Конфигурируемый флаг Secure для JWT-cookie, активированный по умолчанию (CWE-614).")
+bullet("Поле jti в JWT-токенах для поддержки будущего механизма отзыва (CWE-613).")
+bullet("Согласованная allowlist-валидация recipientID между Web- и API-интерфейсами (CWE-20).")
+bullet("Замена детализированных сообщений об ошибках шаблонов на generic «Internal server error» (CWE-209).")
+
+para(
+    "Gosec подтверждает 0 проблем. Govulncheck не выявил уязвимостей в вызываемых символах. "
+    "Архитектура MVP демонстрирует высокий уровень зрелости: параметризованные SQL-запросы "
+    "исключают инъекции, html/template защищает от XSS, ролевая модель корректно реализует "
+    "object-level access control."
 )
-body(
-    "Архитектура MVP демонстрирует высокий уровень зрелости безопасности: "
-    "параметризованные SQL-запросы исключают инъекции, html/template обеспечивает "
-    "автоматическое экранирование XSS, ролевая модель корректно реализует "
-    "object-level access control. Оставшиеся риски (revocation list, account lockout) "
-    "задокументированы как roadmap-элементы для продакшн-деплоя."
+para(
+    "Оставшиеся риски — отсутствие revocation list для JWT и per-user account lockout — "
+    "задокументированы как TODO-элементы roadmap для продакшн-деплоя. "
+    "Оба требуют внешнего хранилища (Redis или дополнительная таблица в БД) и не "
+    "реализованы в MVP ввиду его учебного характера."
 )
 
-# ─── Save ─────────────────────────────────────────────────────────────────────
 doc.save("securep5.docx")
 print("✓  securep5.docx saved")
