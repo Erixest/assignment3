@@ -10,7 +10,7 @@
     {{if .Data}}
     {{$u := index .Data "UserDetail"}}
     {{if $u.OTPEnabled}}
-    <p>2FA is <strong>enabled</strong>. ✓</p>
+    <p>2FA is <strong>enabled</strong>.</p>
     <form method="POST" action="/profile/otp/disable">
         <input type="hidden" name="_csrf" value="{{.CSRF}}">
         <button type="submit" class="secondary">Disable 2FA</button>
