@@ -139,6 +139,9 @@ cookieSecure:   cfg.CookieSecure,
 func (h *WebHandler) RegisterRoutes(r *gin.Engine) {
 staticSubFS, _ := fs.Sub(staticFS, "static")
 r.StaticFS("/static", http.FS(staticSubFS))
+r.GET("/favicon.ico", func(c *gin.Context) {
+c.Redirect(http.StatusMovedPermanently, "/static/favicon.svg")
+})
 
 r.GET("/", h.Home)
 r.GET("/login", h.LoginPage)
@@ -341,9 +344,12 @@ c.Status(http.StatusOK)
 }
 
 func (h *WebHandler) Logout(c *gin.Context) {
+if !h.validateCSRF(c) {
+c.Redirect(http.StatusSeeOther, "/")
+return
+}
 c.SetCookie("token", "", -1, "/", "", false, true)
-c.Header("HX-Redirect", "/")
-c.Status(http.StatusOK)
+c.Redirect(http.StatusSeeOther, "/")
 }
 
 func (h *WebHandler) OTPVerifyPage(c *gin.Context) {

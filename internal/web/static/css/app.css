@@ -56,6 +56,22 @@ nav.container-fluid {
     white-space: nowrap;
 }
 
+/* Logout form styled to look like a nav button */
+.nav-logout {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-logout-btn {
+    cursor: pointer;
+    background: none;
+    border: 1px solid currentColor;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.875rem;
+    border-radius: var(--pico-border-radius, 4px);
+}
+
 .role-pill {
     display: inline-block;
     font-size: 0.65rem;
@@ -644,6 +660,50 @@ button.small, .small {
     cursor: pointer;
     color: var(--primary, #1a56db);
     font-weight: 500;
+}
+
+.otp-manual-hint {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.otp-manual-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6b7280);
+    margin-top: 0.5rem;
+}
+
+.otp-confirm-form {
+    margin-top: 1.5rem;
+}
+
+.otp-code-label {
+    text-align: center;
+    display: block;
+}
+
+.otp-hint {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted, #6b7280);
+    margin-top: 0.25rem;
+}
+
+.otp-actions {
+    margin-top: 1.25rem;
+}
+
+/* Profile card */
+.profile-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
 }
 
 /* Payment form */

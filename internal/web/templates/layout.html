@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{{.Title}} - FinPay</title>
+        <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
         <link rel="stylesheet" href="/static/css/pico.min.css" />
         <link rel="stylesheet" href="/static/css/app.css" />
         <script src="/static/js/htmx.min.js"></script>
@@ -43,14 +44,10 @@
                     <a href="/profile" role="button" class="outline">Profile</a>
                 </li>
                 <li>
-                    <a
-                        href="#"
-                        hx-post="/logout"
-                        hx-target="body"
-                        role="button"
-                        class="secondary"
-                        >Sign Out</a
-                    >
+                    <form action="/logout" method="post" class="nav-logout">
+                        <input type="hidden" name="_csrf" value="{{$.CSRF}}">
+                        <button type="submit" class="secondary nav-logout-btn">Sign Out</button>
+                    </form>
                 </li>
                 {{else}}
                 <li>

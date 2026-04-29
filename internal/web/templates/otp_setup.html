@@ -34,24 +34,24 @@
 
         <details class="otp-manual">
             <summary>Can't scan? Enter the key manually</summary>
-            <p style="margin-top:0.75rem;font-size:0.875rem;">In your app, choose <strong>Enter key manually</strong> and type the code below exactly as shown.</p>
+            <p class="otp-manual-hint">In your app, choose <strong>Enter key manually</strong> and type the code below exactly as shown.</p>
             <div class="otp-secret-box">{{index .Data "Secret"}}</div>
-            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">Account name: FinPay &nbsp;|&nbsp; Type: Time-based (TOTP)</p>
+            <p class="otp-manual-meta">Account name: FinPay &nbsp;|&nbsp; Type: Time-based (TOTP)</p>
         </details>
 
-        <form method="POST" action="/profile/otp/setup" style="margin-top:1.5rem;">
+        <form method="POST" action="/profile/otp/setup" class="otp-confirm-form">
             <input type="hidden" name="_csrf" value="{{.CSRF}}">
             <input type="hidden" name="secret" value="{{index .Data "Secret"}}">
 
-            <label for="code" style="text-align:center;display:block;">
+            <label for="code" class="otp-code-label">
                 Verification Code
                 <input type="text" id="code" name="code" class="otp-code-input"
                        placeholder="000 000" maxlength="6" pattern="[0-9]{6}"
                        required autocomplete="one-time-code" autofocus inputmode="numeric">
             </label>
-            <p style="text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">The code refreshes every 30 seconds</p>
+            <p class="otp-hint">The code refreshes every 30 seconds</p>
 
-            <div class="grid" style="margin-top:1.25rem;">
+            <div class="grid otp-actions">
                 <a href="/profile" role="button" class="secondary outline">Cancel</a>
                 <button type="submit">Activate 2FA</button>
             </div>

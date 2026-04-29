@@ -11,7 +11,7 @@
         <form method="POST" action="/otp/verify">
             <input type="hidden" name="pending_token" value="{{if .Data}}{{index .Data "PendingToken"}}{{end}}">
 
-            <label for="code" style="text-align:center;display:block;">
+            <label for="code" class="otp-code-label">
                 Authentication Code
                 <input type="text" id="code" name="code" class="otp-code-input"
                        placeholder="000000" maxlength="6" pattern="[0-9]{6}"

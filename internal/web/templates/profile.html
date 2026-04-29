@@ -1,5 +1,5 @@
 {{define "content"}}
-<article style="max-width:600px;margin:0 auto;">
+<article class="profile-card">
     <header>
         <h2>Profile</h2>
     </header>
@@ -37,10 +37,9 @@
     <hr>
 
     <p class="section-heading">Payment Data</p>
-    <p style="margin-bottom:1rem;">
+    <div class="profile-actions">
         <a href="/payments" role="button" class="outline">View Payments</a>
-        &nbsp;
         <a href="/payments/export.csv" role="button" class="outline secondary">Export CSV</a>
-    </p>
+    </div>
 </article>
 {{end}}
