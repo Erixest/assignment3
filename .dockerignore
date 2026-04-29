@@ -1,0 +1,6 @@
+.git
+*.db
+*.docx
+__pycache__
+.env
+data/
