@@ -2,6 +2,7 @@ package web
 
 import (
 "embed"
+"encoding/base64"
 "encoding/csv"
 "fmt"
 "html/template"
@@ -12,6 +13,8 @@ import (
 "strings"
 "time"
 "unicode"
+
+qrcode "github.com/skip2/go-qrcode"
 
 "github.com/gin-gonic/gin"
 
@@ -401,12 +404,22 @@ h.render(c, "profile.html", PageData{Title: "Profile", Data: gin.H{"UserDetail":
 
 func (h *WebHandler) OTPSetupPage(c *gin.Context) {
 userClaims := h.getCurrentUser(c)
-secret, url, err := h.otpService.GenerateSecret(userClaims.Email)
+secret, otpURL, err := h.otpService.GenerateSecret(userClaims.Email)
 if err != nil {
 h.render(c, "otp_setup.html", PageData{Title: "Setup OTP", Flash: "Failed to generate secret", FlashType: "error"})
 return
 }
-h.render(c, "otp_setup.html", PageData{Title: "Setup OTP", Data: gin.H{"Secret": secret, "URL": url}})
+
+var qrDataURI string
+if pngBytes, qrErr := qrcode.Encode(otpURL, qrcode.Medium, 256); qrErr == nil {
+qrDataURI = "data:image/png;base64," + base64.StdEncoding.EncodeToString(pngBytes)
+}
+
+h.render(c, "otp_setup.html", PageData{
+Title: "Setup OTP",
+Data:  gin.H{"Secret": secret, "URL": otpURL, "QR": qrDataURI},
+CSRF:  h.csrfToken(c),
+})
 }
 
 func (h *WebHandler) OTPSetupSubmit(c *gin.Context) {
@@ -574,7 +587,7 @@ for _, p := range flagged {
 if p.Status == models.PaymentStatusFlagged {
 stats.Flagged++
 }
-if p.FraudScore > 0.7 {
+if p.FraudScore > 0.5 {
 stats.HighRisk++
 }
 if p.Status == models.PaymentStatusRejected {

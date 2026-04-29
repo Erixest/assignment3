@@ -19,8 +19,8 @@
                 {{if .User}}
                 <li>
                     <span class="user-badge">
-                        {{.User.Email}}
-                        {{if eq (printf "%s" .User.Role) "fraud_analyst"}}
+                        {{.User.Email}} {{if eq (printf "%s" .User.Role)
+                        "fraud_analyst"}}
                         <span class="role-pill analyst">Analyst</span>
                         {{else}}
                         <span class="role-pill">User</span>
@@ -28,15 +28,34 @@
                     </span>
                 </li>
                 {{if eq (printf "%s" .User.Role) "fraud_analyst"}}
-                <li><a href="/analyst" role="button" class="outline secondary">Analyst</a></li>
-                {{end}}
-                <li><a href="/payments" role="button" class="outline">Payments</a></li>
-                <li><a href="/profile" role="button" class="outline">Profile</a></li>
                 <li>
-                    <a href="#" hx-post="/logout" hx-target="body" role="button" class="secondary">Sign Out</a>
+                    <a href="/analyst" role="button" class="outline secondary"
+                        >Analyst</a
+                    >
+                </li>
+                {{end}}
+                <li>
+                    <a href="/payments" role="button" class="outline"
+                        >Payments</a
+                    >
+                </li>
+                <li>
+                    <a href="/profile" role="button" class="outline">Profile</a>
+                </li>
+                <li>
+                    <a
+                        href="#"
+                        hx-post="/logout"
+                        hx-target="body"
+                        role="button"
+                        class="secondary"
+                        >Sign Out</a
+                    >
                 </li>
                 {{else}}
-                <li><a href="/login" role="button" class="outline">Sign In</a></li>
+                <li>
+                    <a href="/login" role="button" class="outline">Sign In</a>
+                </li>
                 <li><a href="/register" role="button">Register</a></li>
                 {{end}}
             </ul>
@@ -45,12 +64,11 @@
         <main class="container">
             {{if .Flash}}
             <article class="flash {{.FlashType}}">{{.Flash}}</article>
-            {{end}}
-            {{block "content" .}}{{end}}
+            {{end}} {{block "content" .}}{{end}}
         </main>
 
         <footer class="container-fluid">
-            <small>FinPay — Secure Payment Processing. Assignment 3, Variant 10.</small>
+            <small>FinPay</small>
         </footer>
     </body>
 </html>

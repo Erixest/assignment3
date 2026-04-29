@@ -109,7 +109,7 @@ func (db *DB) GetFlaggedPayments(limit, offset int) ([]models.Payment, error) {
 		offset = 0
 	}
 
-	query := `SELECT id, receipt_id, user_id, amount, currency, recipient_id, description, status, fraud_score, flagged_by_user_id, flag_reason, created_at, updated_at FROM payments WHERE status = ? OR fraud_score > 0.7 ORDER BY fraud_score DESC, created_at DESC LIMIT ? OFFSET ?`
+	query := `SELECT id, receipt_id, user_id, amount, currency, recipient_id, description, status, fraud_score, flagged_by_user_id, flag_reason, created_at, updated_at FROM payments WHERE status = ? OR fraud_score > 0.5 ORDER BY fraud_score DESC, created_at DESC LIMIT ? OFFSET ?`
 	rows, err := db.conn.Query(query, models.PaymentStatusFlagged, limit, offset)
 	if err != nil {
 		return nil, err

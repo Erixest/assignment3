@@ -92,9 +92,16 @@ func (s *PaymentService) RejectPayment(paymentID, analystID int64, reason string
 func (s *PaymentService) calculateFraudScore(amount float64, currency models.Currency, recipientID string) float64 {
 	score := 0.0
 
-	if amount > 10000 {
-		score += 0.3
-	} else if amount > 5000 {
+	switch {
+	case amount > 500000:
+		score += 0.85
+	case amount > 100000:
+		score += 0.70
+	case amount > 50000:
+		score += 0.55
+	case amount > 10000:
+		score += 0.35
+	case amount > 5000:
 		score += 0.15
 	}
 
@@ -105,7 +112,7 @@ func (s *PaymentService) calculateFraudScore(amount float64, currency models.Cur
 	var randomBytes [8]byte
 	rand.Read(randomBytes[:])
 	randomValue := float64(binary.LittleEndian.Uint64(randomBytes[:])) / float64(^uint64(0))
-	score += randomValue * 0.2
+	score += randomValue * 0.1
 
 	if score > 1.0 {
 		score = 1.0
