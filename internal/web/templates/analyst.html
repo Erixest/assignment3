@@ -2,25 +2,25 @@
 <section>
     <header class="page-header">
         <hgroup>
-            <h2>🛡️ Fraud Analyst Dashboard</h2>
+            <h2>Fraud Analyst Dashboard</h2>
             <p>Monitor and investigate suspicious transactions</p>
         </hgroup>
     </header>
 
     {{with .Data}}
-    <div class="grid">
-        <article class="stat-card">
-            <header>Flagged</header>
+    <div class="stats-row">
+        <div class="stat-card flagged">
+            <p class="stat-label">Flagged</p>
             <p class="stat-number">{{.Stats.Flagged}}</p>
-        </article>
-        <article class="stat-card">
-            <header>High Risk</header>
+        </div>
+        <div class="stat-card high-risk-card">
+            <p class="stat-label">High Risk (fraud > 70%)</p>
             <p class="stat-number">{{.Stats.HighRisk}}</p>
-        </article>
-        <article class="stat-card">
-            <header>Rejected</header>
+        </div>
+        <div class="stat-card rejected-card">
+            <p class="stat-label">Rejected</p>
             <p class="stat-number">{{.Stats.Rejected}}</p>
-        </article>
+        </div>
     </div>
     {{end}}
 
@@ -35,7 +35,7 @@
 
     <article>
         <header>
-            <h3>Recent Audit Logs</h3>
+            <h3>Recent Audit Events</h3>
         </header>
         <div id="audit-list" hx-get="/analyst/audit/list" hx-trigger="load" hx-swap="innerHTML">
             <p aria-busy="true">Loading...</p>

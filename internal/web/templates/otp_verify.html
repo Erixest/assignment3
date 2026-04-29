@@ -1,18 +1,29 @@
 {{define "content"}}
-<article class="auth-form">
-    <header>
-        <hgroup>
-            <h2>Two-Factor Verification</h2>
-            <p>Enter the 6-digit code from your authenticator app</p>
-        </hgroup>
-    </header>
-    <form method="POST" action="/otp/verify">
-        <input type="hidden" name="pending_token" value="{{if .Data}}{{index .Data "PendingToken"}}{{end}}">
-        <label for="code">Authenticator Code
-            <input type="text" id="code" name="code" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code" autofocus>
-        </label>
-        <button type="submit">Verify</button>
-    </form>
-    <footer><small><a href="/login">← Back to login</a></small></footer>
-</article>
+<div class="auth-wrap">
+    <article class="auth-form otp-wrap">
+        <header>
+            <hgroup>
+                <h2>Two-Factor Verification</h2>
+                <p>Enter the 6-digit code from your authenticator app to continue.</p>
+            </hgroup>
+        </header>
+
+        <form method="POST" action="/otp/verify">
+            <input type="hidden" name="pending_token" value="{{if .Data}}{{index .Data "PendingToken"}}{{end}}">
+
+            <label for="code" style="text-align:center;display:block;">
+                Authentication Code
+                <input type="text" id="code" name="code" class="otp-code-input"
+                       placeholder="000000" maxlength="6" pattern="[0-9]{6}"
+                       required autocomplete="one-time-code" autofocus inputmode="numeric">
+            </label>
+
+            <button type="submit">Verify and Sign In</button>
+        </form>
+
+        <footer>
+            <small><a href="/login">Back to Sign In</a></small>
+        </footer>
+    </article>
+</div>
 {{end}}

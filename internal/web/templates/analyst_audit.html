@@ -6,23 +6,23 @@
                 <th>Time</th>
                 <th>Action</th>
                 <th>User</th>
-                <th>Resource</th>
+                <th>Details</th>
                 <th>IP</th>
             </tr>
         </thead>
         <tbody>
             {{range .Logs}}
             <tr>
-                <td><small>{{.CreatedAt.Format "01-02 15:04:05"}}</small></td>
-                <td><code class="action-{{.Action}}">{{.Action}}</code></td>
+                <td><small>{{fmtDate .CreatedAt}}</small></td>
+                <td><span class="audit-action audit-{{.Action}}">{{.Action}}</span></td>
                 <td>{{if .UserID}}#{{.UserID}}{{else}}<span class="muted">—</span>{{end}}</td>
-                <td>{{if .ResourceID}}#{{.ResourceID}}{{else}}<span class="muted">—</span>{{end}}</td>
-                <td><small>{{.IPAddress}}</small></td>
+                <td><small>{{if .Details}}{{.Details}}{{else}}<span class="muted">—</span>{{end}}</small></td>
+                <td><small class="muted">{{.IPAddress}}</small></td>
             </tr>
             {{end}}
         </tbody>
     </table>
 </div>
 {{else}}
-<p class="muted">No audit logs</p>
+<p class="muted">No audit events recorded yet.</p>
 {{end}}

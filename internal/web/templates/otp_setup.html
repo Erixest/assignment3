@@ -1,24 +1,43 @@
 {{define "content"}}
-<article>
-    <header><h2>Setup Two-Factor Authentication</h2></header>
-    <p>Scan the QR code or manually enter the secret key into Google Authenticator, Authy, or any TOTP app.</p>
-    {{if .Data}}
-    <details>
-        <summary>Show provisioning URL (for manual import)</summary>
-        <code style="word-break:break-all">{{index .Data "URL"}}</code>
-    </details>
-    <p><strong>Secret key (manual entry):</strong></p>
-    <pre><code>{{index .Data "Secret"}}</code></pre>
-    <p>After adding the account to your app, enter the 6-digit code below to confirm:</p>
-    <form method="POST" action="/profile/otp/setup">
-        <input type="hidden" name="_csrf" value="{{.CSRF}}">
-        <input type="hidden" name="secret" value="{{index .Data "Secret"}}">
-        <label for="code">Verification Code
-            <input type="text" id="code" name="code" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code" autofocus>
-        </label>
-        <button type="submit">Enable 2FA</button>
-    </form>
-    {{end}}
-    <footer><a href="/profile">← Back to Profile</a></footer>
-</article>
+<div class="otp-wrap">
+    <article>
+        <header>
+            <hgroup>
+                <h2>Set Up Two-Factor Authentication</h2>
+                <p>Scan the secret key into your authenticator app, then confirm with a code.</p>
+            </hgroup>
+        </header>
+
+        {{if .Data}}
+        <p><strong>Step 1.</strong> Open Google Authenticator, Authy, or any TOTP app and add a new account using the key below.</p>
+
+        <p class="section-heading">Your secret key — tap to select all</p>
+        <div class="otp-secret-box"><strong>{{index .Data "Secret"}}</strong></div>
+
+        <details style="margin-bottom:1.25rem;">
+            <summary>Show provisioning URL (for manual import)</summary>
+            <code style="word-break:break-all;font-size:0.75rem;display:block;margin-top:0.5rem;">{{index .Data "URL"}}</code>
+        </details>
+
+        <p><strong>Step 2.</strong> Enter the 6-digit code your app shows to verify and activate 2FA.</p>
+
+        <form method="POST" action="/profile/otp/setup">
+            <input type="hidden" name="_csrf" value="{{.CSRF}}">
+            <input type="hidden" name="secret" value="{{index .Data "Secret"}}">
+
+            <label for="code" style="text-align:center;display:block;">
+                Verification Code
+                <input type="text" id="code" name="code" class="otp-code-input"
+                       placeholder="000000" maxlength="6" pattern="[0-9]{6}"
+                       required autocomplete="one-time-code" autofocus inputmode="numeric">
+            </label>
+
+            <div class="grid">
+                <a href="/profile" role="button" class="secondary outline">Cancel</a>
+                <button type="submit">Activate 2FA</button>
+            </div>
+        </form>
+        {{end}}
+    </article>
+</div>
 {{end}}

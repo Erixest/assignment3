@@ -1,38 +1,38 @@
 {{define "content"}}
-<article class="auth-form">
-    <header>
-        <hgroup>
-            <h2>Create Account</h2>
-            <p>Join FinPay for secure payments</p>
-        </hgroup>
-    </header>
-    
-    <form hx-post="/register" hx-target="#register-result" hx-swap="innerHTML">
-        <label for="email">
-            Email
-            <input type="email" id="email" name="email" placeholder="you@example.com" required autofocus>
-        </label>
-        
-        <label for="password">
-            Password
-            <input type="password" id="password" name="password" placeholder="Min 8 characters" required minlength="8" maxlength="72">
-            <small style="color:var(--muted-color,#6b7280);font-size:.8em;line-height:1.4;display:block;margin-top:.25rem">
-                Uppercase (A–Z) &middot; Lowercase (a–z) &middot; Digit (0–9) &middot; Special char (!@#$%^&amp;*…)
-            </small>
-        </label>
-        
-        <label for="password_confirm">
-            Confirm Password
-            <input type="password" id="password_confirm" name="password_confirm" placeholder="Repeat password" required minlength="8">
-        </label>
-        
-        <button type="submit">Create Account</button>
-    </form>
-    
-    <div id="register-result"></div>
-    
-    <footer>
-        <small>Already have an account? <a href="/login">Sign in</a></small>
-    </footer>
-</article>
+<div class="auth-wrap">
+    <article class="auth-form">
+        <header>
+            <hgroup>
+                <h2>Create Account</h2>
+                <p>Join FinPay for secure digital payments</p>
+            </hgroup>
+        </header>
+
+        <form hx-post="/register" hx-target="#register-result" hx-swap="innerHTML">
+            <label for="email">
+                Email address
+                <input type="email" id="email" name="email" placeholder="you@example.com" required autofocus autocomplete="email">
+            </label>
+
+            <label for="password">
+                Password
+                <input type="password" id="password" name="password" placeholder="Min 8 characters" required minlength="8" maxlength="72" autocomplete="new-password">
+                <small>Must include uppercase (A-Z), lowercase (a-z), a digit (0-9), and a special character.</small>
+            </label>
+
+            <label for="password_confirm">
+                Confirm Password
+                <input type="password" id="password_confirm" name="password_confirm" placeholder="Repeat your password" required minlength="8" autocomplete="new-password">
+            </label>
+
+            <button type="submit">Create Account</button>
+        </form>
+
+        <div id="register-result"></div>
+
+        <footer>
+            <small>Already have an account? <a href="/login">Sign in</a></small>
+        </footer>
+    </article>
+</div>
 {{end}}

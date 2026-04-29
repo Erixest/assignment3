@@ -1,18 +1,18 @@
-<article class="receipt">
+<div class="receipt">
     <header>
         <h3>Payment Submitted</h3>
         <p>Your transaction has been received and is awaiting confirmation.</p>
     </header>
     <dl class="receipt-details">
         <div><dt>Receipt ID</dt><dd><code>{{.ReceiptID}}</code></dd></div>
-        <div><dt>Amount</dt><dd>{{fmtAmount .Amount .Currency}}</dd></div>
+        <div><dt>Amount</dt><dd><strong>{{fmtAmount .Amount .Currency}}</strong></dd></div>
         <div><dt>Recipient</dt><dd><code>{{.RecipientID}}</code></dd></div>
         {{if .Description}}<div><dt>Description</dt><dd>{{.Description}}</dd></div>{{end}}
         <div><dt>Status</dt><dd><span class="status status-pending">Pending</span></dd></div>
-        <div><dt>Date</dt><dd>{{fmtDate .CreatedAt}}</dd></div>
+        <div><dt>Submitted</dt><dd>{{fmtDate .CreatedAt}}</dd></div>
     </dl>
-    <footer class="receipt-actions">
+    <div class="receipt-actions">
         <a href="/payments/new" role="button" class="outline secondary">New payment</a>
         <a href="/payments" role="button">View all payments</a>
-    </footer>
-</article>
+    </div>
+</div>
