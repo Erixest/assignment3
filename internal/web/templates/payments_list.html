@@ -4,7 +4,7 @@
     <table class="striped">
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Receipt</th>
                 <th>Amount</th>
                 <th>Recipient</th>
                 <th>Status</th>
@@ -15,13 +15,13 @@
         <tbody>
             {{range .Payments}}
             <tr>
-                <td><code>#{{.ID}}</code></td>
-                <td class="amount">{{printf "%.2f" .Amount}} {{.Currency}}</td>
+                <td><code>{{.ReceiptID}}</code></td>
+                <td class="amount">{{fmtAmount .Amount .Currency}}</td>
                 <td><code>{{.RecipientID}}</code></td>
                 <td>
-                    <span class="status status-{{.Status}}">{{.Status}}</span>
+                    <span class="status status-{{.Status}}">{{fmtStatus .Status}}</span>
                 </td>
-                <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                <td>{{fmtDate .CreatedAt}}</td>
                 <td>
                     {{if eq .Status "pending"}}
                     <button 

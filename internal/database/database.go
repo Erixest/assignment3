@@ -92,6 +92,7 @@ func (db *DB) migrate() error {
 		`ALTER TABLE users ADD COLUMN otp_enabled INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE users ADD COLUMN locked_until DATETIME`,
+		`ALTER TABLE payments ADD COLUMN receipt_id TEXT NOT NULL DEFAULT ''`,
 	}
 	for _, m := range alterMigrations {
 		db.conn.Exec(m) // ignore error — column may already exist

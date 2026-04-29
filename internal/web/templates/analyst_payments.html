@@ -3,28 +3,32 @@
     <table class="striped">
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Receipt</th>
                 <th>User</th>
                 <th>Amount</th>
+                <th>Recipient</th>
                 <th>Fraud Score</th>
                 <th>Status</th>
+                <th>Date</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {{range .Payments}}
             <tr class="{{if gt .FraudScore 0.7}}high-risk{{end}}">
-                <td><code>#{{.ID}}</code></td>
+                <td><code>{{.ReceiptID}}</code></td>
                 <td>User #{{.UserID}}</td>
-                <td class="amount">{{printf "%.2f" .Amount}} {{.Currency}}</td>
+                <td class="amount">{{fmtAmount .Amount .Currency}}</td>
+                <td><code>{{.RecipientID}}</code></td>
                 <td>
                     <span class="fraud-score {{if gt .FraudScore 0.7}}high{{else if gt .FraudScore 0.4}}medium{{else}}low{{end}}">
                         {{printf "%.0f" (mul .FraudScore 100)}}%
                     </span>
                 </td>
                 <td>
-                    <span class="status status-{{.Status}}">{{.Status}}</span>
+                    <span class="status status-{{.Status}}">{{fmtStatus .Status}}</span>
                 </td>
+                <td>{{fmtDate .CreatedAt}}</td>
                 <td class="actions">
                     {{if ne .Status "rejected"}}
                     <button 

@@ -3,6 +3,7 @@ package web
 import (
 "embed"
 "encoding/csv"
+"fmt"
 "html/template"
 "io/fs"
 "net/http"
@@ -89,16 +90,41 @@ HighRisk int
 Rejected int
 }
 
-func NewWebHandler(authService *services.AuthService, paymentService *services.PaymentService, auditService *services.AuditService, otpService *services.OTPService, db *database.DB, cfg *config.Config) *WebHandler {
-funcMap := template.FuncMap{
-"mul": func(a, b float64) float64 { return a * b },
+func buildFuncMap() template.FuncMap {
+	return template.FuncMap{
+		"mul": func(a, b float64) float64 { return a * b },
+		"fmtAmount": func(amount float64, currency models.Currency) string {
+			s := fmt.Sprintf("%.2f", amount)
+			parts := strings.SplitN(s, ".", 2)
+			intPart := parts[0]
+			var out strings.Builder
+			n := len(intPart)
+			for i, ch := range intPart {
+				if i > 0 && (n-i)%3 == 0 {
+					out.WriteByte(',')
+				}
+				out.WriteRune(ch)
+			}
+			return out.String() + "." + parts[1] + "\u00a0" + string(currency)
+		},
+		"fmtDate": func(t time.Time) string {
+			return t.Format("02 Jan 2006, 15:04")
+		},
+		"fmtStatus": func(s models.PaymentStatus) string {
+			if len(s) == 0 {
+				return ""
+			}
+			return strings.ToUpper(string(s[0])) + string(s[1:])
+		},
+	}
 }
 
-tmpl := template.Must(template.New("").Funcs(funcMap).ParseFS(templateFS, "templates/*.html"))
+func NewWebHandler(authService *services.AuthService, paymentService *services.PaymentService, auditService *services.AuditService, otpService *services.OTPService, db *database.DB, cfg *config.Config) *WebHandler {
+	tmpl := template.Must(template.New("").Funcs(buildFuncMap()).ParseFS(templateFS, "templates/*.html"))
 
-return &WebHandler{
-templates:      tmpl,
-authService:    authService,
+	return &WebHandler{
+		templates:      tmpl,
+		authService:    authService,
 paymentService: paymentService,
 auditService:   auditService,
 otpService:     otpService,
@@ -164,11 +190,7 @@ data.User = h.getCurrentUser(c)
 data.CSRF = h.csrfToken(c)
 c.Header("Content-Type", "text/html; charset=utf-8")
 
-funcMap := template.FuncMap{
-"mul": func(a, b float64) float64 { return a * b },
-}
-
-tmpl, err := template.New("").Funcs(funcMap).ParseFS(templateFS, "templates/layout.html", "templates/"+name)
+tmpl, err := template.New("").Funcs(buildFuncMap()).ParseFS(templateFS, "templates/layout.html", "templates/"+name)
 if err != nil {
 c.String(http.StatusInternalServerError, "Internal server error")
 return
@@ -484,8 +506,7 @@ return
 
 h.auditService.Log(&user.UserID, models.AuditActionPaymentCreated, &payment.ID, "web payment", c.ClientIP())
 
-c.Header("HX-Redirect", "/payments")
-c.Status(http.StatusOK)
+h.renderPartial(c, "payment_receipt.html", payment)
 }
 
 func (h *WebHandler) ConfirmPayment(c *gin.Context) {
@@ -527,9 +548,10 @@ c.Header("Content-Disposition", `attachment; filename="payments.csv"`)
 c.Header("Content-Type", "text/csv; charset=utf-8")
 
 w := csv.NewWriter(c.Writer)
-w.Write([]string{"ID", "Amount", "Currency", "RecipientID", "Description", "Status", "CreatedAt"})
+w.Write([]string{"ReceiptID", "ID", "Amount", "Currency", "RecipientID", "Description", "Status", "CreatedAt"})
 for _, p := range payments {
 w.Write([]string{
+p.ReceiptID,
 strconv.FormatInt(p.ID, 10),
 strconv.FormatFloat(p.Amount, 'f', 2, 64),
 string(p.Currency),

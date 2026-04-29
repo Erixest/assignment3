@@ -29,6 +29,7 @@ var ValidCurrencies = map[Currency]bool{
 
 type Payment struct {
 	ID              int64         `json:"id"`
+	ReceiptID       string        `json:"receipt_id"`
 	UserID          int64         `json:"user_id"`
 	Amount          float64       `json:"amount"`
 	Currency        Currency      `json:"currency"`
@@ -44,6 +45,7 @@ type Payment struct {
 
 type PaymentResponse struct {
 	ID          int64         `json:"id"`
+	ReceiptID   string        `json:"receipt_id"`
 	Amount      float64       `json:"amount"`
 	Currency    Currency      `json:"currency"`
 	RecipientID string        `json:"recipient_id"`
@@ -55,6 +57,7 @@ type PaymentResponse struct {
 func (p *Payment) ToResponse() PaymentResponse {
 	return PaymentResponse{
 		ID:          p.ID,
+		ReceiptID:   p.ReceiptID,
 		Amount:      p.Amount,
 		Currency:    p.Currency,
 		RecipientID: p.RecipientID,
@@ -66,6 +69,7 @@ func (p *Payment) ToResponse() PaymentResponse {
 
 type PaymentAnalystResponse struct {
 	ID              int64         `json:"id"`
+	ReceiptID       string        `json:"receipt_id"`
 	UserID          int64         `json:"user_id"`
 	Amount          float64       `json:"amount"`
 	Currency        Currency      `json:"currency"`
@@ -81,6 +85,7 @@ type PaymentAnalystResponse struct {
 func (p *Payment) ToAnalystResponse() PaymentAnalystResponse {
 	return PaymentAnalystResponse{
 		ID:              p.ID,
+		ReceiptID:       p.ReceiptID,
 		UserID:          p.UserID,
 		Amount:          p.Amount,
 		Currency:        p.Currency,
