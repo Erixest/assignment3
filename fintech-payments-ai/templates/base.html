@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FinPay{% endblock %} — FinPay</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="logo" href="/">FinPay</a>
+      <nav>
+        {% if user %}
+          <a href="/dashboard">Платежи</a>
+          {% if user.role == "analyst" %}
+            <a href="/analyst">Аналитика</a>
+            <a href="/analyst/audit">Журнал</a>
+          {% endif %}
+          <span class="nav-user">{{ user.sub }} <span class="role-pill role-{{ user.role }}">{{ user.role }}</span></span>
+          <form action="/logout" method="post" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn-link">Выход</button>
+          </form>
+        {% else %}
+          <a href="/login">Войти</a>
+          <a href="/register">Регистрация</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer><div class="container"><p>FinPay AI Edition — Secure Payments Platform</p></div></footer>
+</body>
+</html>

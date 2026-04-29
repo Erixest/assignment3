@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Мои платежи{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Мои платежи</h1>
+  <a href="/payments/new" class="btn btn-primary">Новый платеж</a>
+</div>
+
+<div class="card">
+  {% if payments %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Квитанция</th>
+        <th>Получатель</th>
+        <th>Сумма</th>
+        <th>Валюта</th>
+        <th>Статус</th>
+        <th>Риск</th>
+        <th>Дата</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td><code>{{ p.receipt_id }}</code></td>
+        <td>{{ p.recipient }}</td>
+        <td class="amount">{{ "%.2f"|format(p.amount) }}</td>
+        <td>{{ p.currency }}</td>
+        <td><span class="status-badge status-{{ p.status }}">{{ p.status }}</span></td>
+        <td>{{ "%.2f"|format(p.risk_score) }}</td>
+        <td>{{ p.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="/dashboard?page={{ page - 1 }}" class="btn btn-secondary btn-sm">Назад</a>
+    {% endif %}
+    <span class="page-info">Страница {{ page }} из {{ total_pages }} (всего {{ total }})</span>
+    {% if page < total_pages %}
+      <a href="/dashboard?page={{ page + 1 }}" class="btn btn-secondary btn-sm">Вперед</a>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="table-footer">Всего платежей: {{ total }}</p>
+  {% endif %}
+
+  {% else %}
+  <p class="empty-state">У вас ещё нет платежей. <a href="/payments/new">Создайте первый платеж</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./payments.db:/app/payments.db
+    restart: unless-stopped

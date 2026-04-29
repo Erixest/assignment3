@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Новый платеж{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Создание платежа</h1>
+  <a href="/dashboard" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="card form-card">
+  <form action="/payments/new" method="post" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <div class="form-group">
+      <label for="recipient">Получатель <span class="required">*</span></label>
+      <input type="text" id="recipient" name="recipient" required maxlength="100" placeholder="Название банка или получателя">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="amount">Сумма <span class="required">*</span></label>
+        <input type="number" id="amount" name="amount" required min="0.01" max="5000000" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label for="currency">Валюта</label>
+        <select id="currency" name="currency">
+          <option value="KZT">KZT — Тенге</option>
+          <option value="USD">USD — Доллар США</option>
+          <option value="EUR">EUR — Евро</option>
+          <option value="RUB">RUB — Рубль</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Описание</label>
+      <textarea id="description" name="description" rows="3" maxlength="500" placeholder="Назначение платежа (необязательно)"></textarea>
+    </div>
+
+    <div class="form-notice">
+      <strong>Важно:</strong> Платежи на сумму свыше 200 000 единиц автоматически помечаются для проверки аналитиком.
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Создать платеж</button>
+      <a href="/dashboard" class="btn btn-secondary">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

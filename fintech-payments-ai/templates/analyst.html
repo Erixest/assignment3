@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Панель аналитика{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Панель аналитика</h1>
+  <a href="/analyst/export" class="btn btn-secondary">Экспорт CSV</a>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card stat-total">
+    <div class="stat-number">{{ stats.total }}</div>
+    <div class="stat-label">Всего платежей</div>
+  </div>
+  <div class="stat-card stat-completed">
+    <div class="stat-number">{{ stats.completed }}</div>
+    <div class="stat-label">Завершено</div>
+  </div>
+  <div class="stat-card stat-flagged">
+    <div class="stat-number">{{ stats.flagged }}</div>
+    <div class="stat-label">Помечено</div>
+  </div>
+  <div class="stat-card stat-rejected">
+    <div class="stat-number">{{ stats.rejected }}</div>
+    <div class="stat-label">Отклонено</div>
+  </div>
+  <div class="stat-card stat-highrisk">
+    <div class="stat-number">{{ stats.high_risk }}</div>
+    <div class="stat-label">Высокий риск</div>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 1.5rem;">
+  <div class="table-toolbar">
+    <form action="/analyst" method="get" class="filter-form">
+      <label for="status_filter">Фильтр по статусу:</label>
+      <select name="status_filter" id="status_filter" onchange="this.form.submit()">
+        <option value="" {% if not status_filter %}selected{% endif %}>Все</option>
+        <option value="pending"   {% if status_filter == "pending"   %}selected{% endif %}>pending</option>
+        <option value="completed" {% if status_filter == "completed" %}selected{% endif %}>completed</option>
+        <option value="flagged"   {% if status_filter == "flagged"   %}selected{% endif %}>flagged</option>
+        <option value="rejected"  {% if status_filter == "rejected"  %}selected{% endif %}>rejected</option>
+      </select>
+    </form>
+  </div>
+
+  {% if payments %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Квитанция</th>
+        <th>Польз.</th>
+        <th>Получатель</th>
+        <th>Сумма</th>
+        <th>Валюта</th>
+        <th>Статус</th>
+        <th>Риск</th>
+        <th>Дата</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in payments %}
+      <tr class="{% if p.status == 'flagged' %}row-flagged{% elif p.status == 'rejected' %}row-rejected{% endif %}">
+        <td><code>{{ p.receipt_id }}</code></td>
+        <td>{{ p.user_id }}</td>
+        <td>{{ p.recipient }}</td>
+        <td class="amount">{{ "%.2f"|format(p.amount) }}</td>
+        <td>{{ p.currency }}</td>
+        <td><span class="status-badge status-{{ p.status }}">{{ p.status }}</span></td>
+        <td class="{% if p.risk_score > 0.7 %}risk-high{% elif p.risk_score > 0.4 %}risk-medium{% else %}risk-low{% endif %}">{{ "%.2f"|format(p.risk_score) }}</td>
+        <td>{{ p.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+        <td class="actions">
+          {% if p.status not in ["flagged", "rejected"] %}
+          <form action="/analyst/payments/{{ p.id }}/flag" method="post" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-warning btn-sm">Flag</button>
+          </form>
+          {% endif %}
+          {% if p.status != "rejected" %}
+          <form action="/analyst/payments/{{ p.id }}/reject" method="post" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="/analyst?page={{ page - 1 }}&status_filter={{ status_filter }}" class="btn btn-secondary btn-sm">Назад</a>
+    {% endif %}
+    <span class="page-info">Страница {{ page }} из {{ total_pages }} (всего {{ total }})</span>
+    {% if page < total_pages %}
+      <a href="/analyst?page={{ page + 1 }}&status_filter={{ status_filter }}" class="btn btn-secondary btn-sm">Вперед</a>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="table-footer">Всего: {{ total }}</p>
+  {% endif %}
+
+  {% else %}
+  <p class="empty-state">Платежи не найдены.</p>
+  {% endif %}
+</div>
+{% endblock %}

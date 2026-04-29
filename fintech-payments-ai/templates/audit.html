@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Журнал аудита{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Журнал аудита</h1>
+  <a href="/analyst" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="card">
+  {% if logs %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Дата и время</th>
+        <th>Пользователь</th>
+        <th>Действие</th>
+        <th>Ресурс</th>
+        <th>Детали</th>
+        <th>IP-адрес</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.created_at.strftime("%d.%m.%Y %H:%M:%S") }}</td>
+        <td>{{ log.username or "—" }}</td>
+        <td><span class="action-badge action-{{ log.action }}">{{ log.action }}</span></td>
+        <td>{{ log.resource or "—" }}</td>
+        <td class="details-cell">{{ log.details or "—" }}</td>
+        <td>{{ log.ip_address or "—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="/analyst/audit?page={{ page - 1 }}" class="btn btn-secondary btn-sm">Назад</a>
+    {% endif %}
+    <span class="page-info">Страница {{ page }} из {{ total_pages }} (всего {{ total }})</span>
+    {% if page < total_pages %}
+      <a href="/analyst/audit?page={{ page + 1 }}" class="btn btn-secondary btn-sm">Вперед</a>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="table-footer">Всего записей: {{ total }}</p>
+  {% endif %}
+
+  {% else %}
+  <p class="empty-state">Журнал аудита пуст.</p>
+  {% endif %}
+</div>
+{% endblock %}
