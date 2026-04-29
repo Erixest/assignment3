@@ -1,4 +1,5 @@
 {{if .Payments}}
+<input type="hidden" name="_csrf" value="{{.CSRF}}">
 <div class="overflow-auto">
     <table class="striped">
         <thead>
@@ -28,6 +29,7 @@
                         hx-post="/payments/{{.ID}}/confirm" 
                         hx-target="#payments-list"
                         hx-swap="innerHTML"
+                        hx-include="[name='_csrf']"
                         hx-confirm="Confirm this payment?">
                         Confirm
                     </button>

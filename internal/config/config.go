@@ -15,7 +15,8 @@ type Config struct {
 	RateLimitWindow    time.Duration
 	// CookieSecure controls the Secure flag on session cookies.
 	// Should be true in production (HTTPS). Can be set to false for local HTTP dev.
-	CookieSecure       bool
+	CookieSecure bool
+	OTPIssuer    string
 }
 
 func Load() *Config {
@@ -25,13 +26,14 @@ func Load() *Config {
 	cookieSecure := getEnv("COOKIE_SECURE", "true") != "false"
 
 	return &Config{
-		JWTSecret:          getEnv("JWT_SECRET", ""),
-		DatabasePath:       getEnv("DATABASE_PATH", "./payments.db"),
-		ServerPort:         getEnv("SERVER_PORT", "8080"),
-		JWTExpiry:          time.Duration(jwtExpiry) * time.Minute,
-		RateLimitRequests:  rateLimitReqs,
-		RateLimitWindow:    time.Duration(rateLimitWindow) * time.Second,
-		CookieSecure:       cookieSecure,
+		JWTSecret:         getEnv("JWT_SECRET", ""),
+		DatabasePath:      getEnv("DATABASE_PATH", "./payments.db"),
+		ServerPort:        getEnv("SERVER_PORT", "8080"),
+		JWTExpiry:         time.Duration(jwtExpiry) * time.Minute,
+		RateLimitRequests: rateLimitReqs,
+		RateLimitWindow:   time.Duration(rateLimitWindow) * time.Second,
+		CookieSecure:      cookieSecure,
+		OTPIssuer:         getEnv("OTP_ISSUER", "FinPay"),
 	}
 }
 

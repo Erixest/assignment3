@@ -15,6 +15,12 @@ const (
 	AuditActionPaymentFlagged  AuditAction = "payment_flagged"
 	AuditActionPaymentRejected AuditAction = "payment_rejected"
 	AuditActionPaymentViewed   AuditAction = "payment_viewed"
+	AuditActionOTPEnabled      AuditAction = "otp_enabled"
+	AuditActionOTPDisabled     AuditAction = "otp_disabled"
+	AuditActionOTPVerified     AuditAction = "otp_verified"
+	AuditActionOTPFailed       AuditAction = "otp_failed"
+	AuditActionAccountLocked   AuditAction = "account_locked"
+	AuditActionCSVExported     AuditAction = "csv_exported"
 )
 
 type AuditLog struct {

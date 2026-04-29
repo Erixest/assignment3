@@ -5,6 +5,7 @@
             <h3>⚠️ Reject Payment #{{.Payment.ID}}</h3>
         </header>
         <form hx-post="/analyst/payments/{{.Payment.ID}}/reject" hx-target="#flagged-list" hx-swap="innerHTML">
+            <input type="hidden" name="_csrf" value="{{.CSRF}}">
             <p class="warning">
                 This action is irreversible. The payment will be permanently rejected.
             </p>

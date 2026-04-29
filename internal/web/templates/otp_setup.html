@@ -1,0 +1,24 @@
+{{define "content"}}
+<article>
+    <header><h2>Setup Two-Factor Authentication</h2></header>
+    <p>Scan the QR code or manually enter the secret key into Google Authenticator, Authy, or any TOTP app.</p>
+    {{if .Data}}
+    <details>
+        <summary>Show provisioning URL (for manual import)</summary>
+        <code style="word-break:break-all">{{index .Data "URL"}}</code>
+    </details>
+    <p><strong>Secret key (manual entry):</strong></p>
+    <pre><code>{{index .Data "Secret"}}</code></pre>
+    <p>After adding the account to your app, enter the 6-digit code below to confirm:</p>
+    <form method="POST" action="/profile/otp/setup">
+        <input type="hidden" name="_csrf" value="{{.CSRF}}">
+        <input type="hidden" name="secret" value="{{index .Data "Secret"}}">
+        <label for="code">Verification Code
+            <input type="text" id="code" name="code" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code" autofocus>
+        </label>
+        <button type="submit">Enable 2FA</button>
+    </form>
+    {{end}}
+    <footer><a href="/profile">← Back to Profile</a></footer>
+</article>
+{{end}}

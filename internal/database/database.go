@@ -86,5 +86,32 @@ func (db *DB) migrate() error {
 		}
 	}
 
+	// ALTER TABLE migrations — ignore errors since columns may already exist
+	alterMigrations := []string{
+		`ALTER TABLE users ADD COLUMN otp_secret TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE users ADD COLUMN otp_enabled INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE users ADD COLUMN failed_attempts INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE users ADD COLUMN locked_until DATETIME`,
+	}
+	for _, m := range alterMigrations {
+		db.conn.Exec(m) // ignore error — column may already exist
+	}
+
+	// New tables
+	newTables := []string{
+		`CREATE TABLE IF NOT EXISTS otp_pending (
+			token TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL,
+			expires_at DATETIME NOT NULL,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_otp_pending_expires ON otp_pending(expires_at)`,
+	}
+	for _, m := range newTables {
+		if _, err := db.conn.Exec(m); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
